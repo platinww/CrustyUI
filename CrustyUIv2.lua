@@ -60,21 +60,19 @@ function Library:CreateWindow(config)
 	local TitleCorner = Instance.new("UICorner")
 	TitleCorner.Parent = TitleFrame
 	
-	-- Başlık TextBox
-	local TitleText = Instance.new("TextBox")
+	-- Başlık Text
+	local TitleText = Instance.new("TextLabel")
 	TitleText.Name = "TitleText"
-	TitleText.CursorPosition = -1
 	TitleText.TextXAlignment = Enum.TextXAlignment.Left
 	TitleText.ZIndex = 2
 	TitleText.BorderSizePixel = 0
 	TitleText.TextSize = 17
-	TitleText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	TitleText.BackgroundTransparency = 1
 	TitleText.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 	TitleText.Size = UDim2.new(1, -8, 1, 0)
 	TitleText.Position = UDim2.new(0, 4, 0, 0)
 	TitleText.Text = "📂 " .. windowTitle
-	TitleText.BackgroundTransparency = 10
-	TitleText.TextEditable = false
+	TitleText.TextColor3 = Color3.fromRGB(0, 0, 0)
 	TitleText.Parent = TitleFrame
 	
 	-- Tab Container
@@ -143,24 +141,27 @@ function Library:CreateWindow(config)
 		local tab = {}
 		tab.Elements = {}
 		tab.Container = nil
+		tab.Button = nil
 		
-		-- Tab Button
-		local TabButton = Instance.new("TextBox")
+		-- Tab Button (TEXTBUTTON OLARAK!)
+		local TabButton = Instance.new("TextButton")
 		TabButton.Name = tabName
-		TabButton.CursorPosition = -1
 		TabButton.ZIndex = 2
 		TabButton.BorderSizePixel = 0
 		TabButton.TextSize = 14
 		TabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		TabButton.TextColor3 = Color3.fromRGB(0, 0, 0)
 		TabButton.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 		TabButton.Size = UDim2.new(0, 74, 0, 26)
 		TabButton.Text = tabName
 		TabButton.BackgroundTransparency = 0.1
-		TabButton.TextEditable = false
+		TabButton.AutoButtonColor = false
 		TabButton.Parent = TabContainer
 		
 		local TabCorner = Instance.new("UICorner")
 		TabCorner.Parent = TabButton
+		
+		tab.Button = TabButton
 		
 		-- Tab Content Frame
 		local TabContent = Instance.new("ScrollingFrame")
@@ -171,12 +172,18 @@ function Library:CreateWindow(config)
 		TabContent.Position = UDim2.new(0, 4, 0, 4)
 		TabContent.ScrollBarThickness = 4
 		TabContent.Visible = false
+		TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
 		TabContent.Parent = ContentContainer
 		
 		local ContentLayout = Instance.new("UIListLayout")
 		ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		ContentLayout.Padding = UDim.new(0, 6)
 		ContentLayout.Parent = TabContent
+		
+		-- Auto resize canvas
+		ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
+		end)
 		
 		tab.Container = TabContent
 		
@@ -186,14 +193,27 @@ function Library:CreateWindow(config)
 				if otherTab.Container then
 					otherTab.Container.Visible = false
 				end
+				if otherTab.Button then
+					TweenService:Create(
+						otherTab.Button,
+						tweenInfo,
+						{BackgroundColor3 = Color3.fromRGB(255, 255, 255)}
+					):Play()
+				end
 			end
 			TabContent.Visible = true
+			TweenService:Create(
+				TabButton,
+				tweenInfo,
+				{BackgroundColor3 = Color3.fromRGB(220, 220, 220)}
+			):Play()
 			window.CurrentTab = tab
 		end)
 		
 		-- İlk tab'ı aktif et
 		if #window.Tabs == 0 then
 			TabContent.Visible = true
+			TabButton.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
 			window.CurrentTab = tab
 		end
 		
@@ -221,9 +241,8 @@ function Library:CreateWindow(config)
 			ToggleCorner.Parent = ToggleFrame
 			
 			-- Toggle Text
-			local ToggleText = Instance.new("TextBox")
+			local ToggleText = Instance.new("TextLabel")
 			ToggleText.Name = "ToggleText"
-			ToggleText.CursorPosition = -1
 			ToggleText.TextXAlignment = Enum.TextXAlignment.Left
 			ToggleText.ZIndex = 2
 			ToggleText.BorderSizePixel = 0
@@ -233,17 +252,19 @@ function Library:CreateWindow(config)
 			ToggleText.Size = UDim2.new(1, -54, 1, 0)
 			ToggleText.Position = UDim2.new(0, 6, 0, 0)
 			ToggleText.Text = toggleName
-			ToggleText.TextEditable = false
+			ToggleText.TextColor3 = Color3.fromRGB(0, 0, 0)
 			ToggleText.Parent = ToggleFrame
 			
 			-- Toggle Switch
-			local ToggleSwitch = Instance.new("Frame")
+			local ToggleSwitch = Instance.new("TextButton")
 			ToggleSwitch.Name = "ToggleSwitch"
 			ToggleSwitch.ZIndex = 3
 			ToggleSwitch.BorderSizePixel = 0
 			ToggleSwitch.BackgroundColor3 = toggleState and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(200, 200, 200)
 			ToggleSwitch.Size = UDim2.new(0, 44, 0, 20)
 			ToggleSwitch.Position = UDim2.new(1, -48, 0.5, -10)
+			ToggleSwitch.Text = ""
+			ToggleSwitch.AutoButtonColor = false
 			ToggleSwitch.Parent = ToggleFrame
 			
 			local SwitchCorner = Instance.new("UICorner")
@@ -286,10 +307,8 @@ function Library:CreateWindow(config)
 			end
 			
 			-- Click event
-			ToggleSwitch.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					toggle()
-				end
+			ToggleSwitch.MouseButton1Click:Connect(function()
+				toggle()
 			end)
 			
 			-- Return toggle object
@@ -328,10 +347,12 @@ function Library:CreateWindow(config)
 			ButtonText.BorderSizePixel = 0
 			ButtonText.TextSize = 15
 			ButtonText.BackgroundTransparency = 1
+			ButtonText.TextColor3 = Color3.fromRGB(0, 0, 0)
 			ButtonText.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 			ButtonText.Size = UDim2.new(1, -12, 1, 0)
 			ButtonText.Position = UDim2.new(0, 6, 0, 0)
 			ButtonText.Text = buttonName
+			ButtonText.AutoButtonColor = false
 			ButtonText.Parent = ButtonFrame
 			
 			-- Click effect
