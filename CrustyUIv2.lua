@@ -18,6 +18,7 @@ Library.__index = Library
 
 -- Tween ayarları
 local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local fastTween = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 function Library:CreateWindow(config)
 	config = config or {}
@@ -26,6 +27,8 @@ function Library:CreateWindow(config)
 	local window = {}
 	window.CurrentTab = nil
 	window.Tabs = {}
+	window.ToggleButton = nil
+	window.MainFrame = nil
 	
 	-- ScreenGui oluştur
 	local ScreenGui = Instance.new("ScreenGui")
@@ -42,7 +45,10 @@ function Library:CreateWindow(config)
 	MainFrame.Size = UDim2.new(0, 252, 0, 294)
 	MainFrame.Position = UDim2.new(0.5, -126, 0.5, -147)
 	MainFrame.BackgroundTransparency = 0.5
+	MainFrame.ClipsDescendants = true
 	MainFrame.Parent = ScreenGui
+	
+	window.MainFrame = MainFrame
 	
 	local MainCorner = Instance.new("UICorner")
 	MainCorner.Parent = MainFrame
@@ -69,19 +75,61 @@ function Library:CreateWindow(config)
 	TitleText.TextSize = 17
 	TitleText.BackgroundTransparency = 1
 	TitleText.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-	TitleText.Size = UDim2.new(1, -8, 1, 0)
+	TitleText.Size = UDim2.new(1, -40, 1, 0)
 	TitleText.Position = UDim2.new(0, 4, 0, 0)
 	TitleText.Text = "📂 " .. windowTitle
 	TitleText.TextColor3 = Color3.fromRGB(0, 0, 0)
 	TitleText.Parent = TitleFrame
 	
-	-- Tab Container
-	local TabContainer = Instance.new("Frame")
+	-- Close Button (X)
+	local CloseButton = Instance.new("TextButton")
+	CloseButton.Name = "CloseButton"
+	CloseButton.ZIndex = 3
+	CloseButton.BorderSizePixel = 0
+	CloseButton.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
+	CloseButton.Size = UDim2.new(0, 28, 0, 28)
+	CloseButton.Position = UDim2.new(1, -32, 0, 4)
+	CloseButton.Text = "✕"
+	CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	CloseButton.TextSize = 16
+	CloseButton.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+	CloseButton.AutoButtonColor = false
+	CloseButton.Parent = TitleFrame
+	
+	local CloseCorner = Instance.new("UICorner")
+	CloseCorner.CornerRadius = UDim.new(0, 6)
+	CloseCorner.Parent = CloseButton
+	
+	CloseButton.MouseButton1Click:Connect(function()
+		TweenService:Create(MainFrame, tweenInfo, {
+			Size = UDim2.new(0, 0, 0, 0),
+			Position = UDim2.new(0.5, 0, 0.5, 0)
+		}):Play()
+		
+		task.wait(0.3)
+		MainFrame.Visible = false
+		MainFrame.Size = UDim2.new(0, 252, 0, 294)
+		MainFrame.Position = UDim2.new(0.5, -126, 0.5, -147)
+	end)
+	
+	CloseButton.MouseEnter:Connect(function()
+		TweenService:Create(CloseButton, fastTween, {BackgroundColor3 = Color3.fromRGB(255, 50, 50)}):Play()
+	end)
+	
+	CloseButton.MouseLeave:Connect(function()
+		TweenService:Create(CloseButton, fastTween, {BackgroundColor3 = Color3.fromRGB(255, 75, 75)}):Play()
+	end)
+	
+	-- Tab Container (Scrolling)
+	local TabContainer = Instance.new("ScrollingFrame")
 	TabContainer.Name = "TabContainer"
 	TabContainer.BorderSizePixel = 0
 	TabContainer.BackgroundTransparency = 1
 	TabContainer.Size = UDim2.new(1, -16, 0, 26)
 	TabContainer.Position = UDim2.new(0, 8, 0, 50)
+	TabContainer.ScrollBarThickness = 0
+	TabContainer.CanvasSize = UDim2.new(0, 0, 0, 26)
+	TabContainer.ScrollingDirection = Enum.ScrollingDirection.X
 	TabContainer.Parent = MainFrame
 	
 	local TabLayout = Instance.new("UIListLayout")
@@ -89,6 +137,11 @@ function Library:CreateWindow(config)
 	TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	TabLayout.Padding = UDim.new(0, 8)
 	TabLayout.Parent = TabContainer
+	
+	-- Auto resize tab canvas
+	TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		TabContainer.CanvasSize = UDim2.new(0, TabLayout.AbsoluteContentSize.X, 0, 26)
+	end)
 	
 	-- Content Container
 	local ContentContainer = Instance.new("Frame")
@@ -136,6 +189,60 @@ function Library:CreateWindow(config)
 		end
 	end)
 	
+	-- Toggle Button oluşturma fonksiyonu
+	function window:CreateToggleButton(config)
+		config = config or {}
+		local buttonImage = config.Image or "rbxassetid://7734053495"
+		local buttonSize = config.Size or UDim2.new(0, 50, 0, 50)
+		local buttonPosition = config.Position or UDim2.new(0, 10, 0.5, -25)
+		
+		local ToggleButton = Instance.new("ImageButton")
+		ToggleButton.Name = "ToggleButton"
+		ToggleButton.Image = buttonImage
+		ToggleButton.Size = buttonSize
+		ToggleButton.Position = buttonPosition
+		ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 139, 255)
+		ToggleButton.BorderSizePixel = 0
+		ToggleButton.Parent = ScreenGui
+		
+		local ToggleCorner = Instance.new("UICorner")
+		ToggleCorner.CornerRadius = UDim.new(0, 12)
+		ToggleCorner.Parent = ToggleButton
+		
+		window.ToggleButton = ToggleButton
+		
+		ToggleButton.MouseButton1Click:Connect(function()
+			if MainFrame.Visible then
+				TweenService:Create(MainFrame, tweenInfo, {
+					Size = UDim2.new(0, 0, 0, 0),
+					Position = UDim2.new(0.5, 0, 0.5, 0)
+				}):Play()
+				
+				task.wait(0.3)
+				MainFrame.Visible = false
+				MainFrame.Size = UDim2.new(0, 252, 0, 294)
+				MainFrame.Position = UDim2.new(0.5, -126, 0.5, -147)
+			else
+				MainFrame.Visible = true
+				MainFrame.Size = UDim2.new(0, 0, 0, 0)
+				MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+				
+				TweenService:Create(MainFrame, tweenInfo, {
+					Size = UDim2.new(0, 252, 0, 294),
+					Position = UDim2.new(0.5, -126, 0.5, -147)
+				}):Play()
+			end
+		end)
+		
+		ToggleButton.MouseEnter:Connect(function()
+			TweenService:Create(ToggleButton, fastTween, {Size = buttonSize + UDim2.new(0, 5, 0, 5)}):Play()
+		end)
+		
+		ToggleButton.MouseLeave:Connect(function()
+			TweenService:Create(ToggleButton, fastTween, {Size = buttonSize}):Play()
+		end)
+	end
+	
 	-- Tab oluşturma fonksiyonu
 	function window:CreateTab(tabName)
 		local tab = {}
@@ -143,7 +250,7 @@ function Library:CreateWindow(config)
 		tab.Container = nil
 		tab.Button = nil
 		
-		-- Tab Button (TEXTBUTTON OLARAK!)
+		-- Tab Button
 		local TabButton = Instance.new("TextButton")
 		TabButton.Name = tabName
 		TabButton.ZIndex = 2
@@ -180,7 +287,6 @@ function Library:CreateWindow(config)
 		ContentLayout.Padding = UDim.new(0, 6)
 		ContentLayout.Parent = TabContent
 		
-		-- Auto resize canvas
 		ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
 		end)
@@ -191,23 +297,33 @@ function Library:CreateWindow(config)
 		TabButton.MouseButton1Click:Connect(function()
 			for _, otherTab in pairs(window.Tabs) do
 				if otherTab.Container then
+					TweenService:Create(otherTab.Container, fastTween, {Size = UDim2.new(1, -8, 0, 0)}):Play()
+					task.wait(0.15)
 					otherTab.Container.Visible = false
+					otherTab.Container.Size = UDim2.new(1, -8, 1, -8)
 				end
 				if otherTab.Button then
-					TweenService:Create(
-						otherTab.Button,
-						tweenInfo,
-						{BackgroundColor3 = Color3.fromRGB(255, 255, 255)}
-					):Play()
+					TweenService:Create(otherTab.Button, fastTween, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 				end
 			end
+			
 			TabContent.Visible = true
-			TweenService:Create(
-				TabButton,
-				tweenInfo,
-				{BackgroundColor3 = Color3.fromRGB(220, 220, 220)}
-			):Play()
+			TabContent.Size = UDim2.new(1, -8, 0, 0)
+			TweenService:Create(TabContent, fastTween, {Size = UDim2.new(1, -8, 1, -8)}):Play()
+			TweenService:Create(TabButton, fastTween, {BackgroundColor3 = Color3.fromRGB(220, 220, 220)}):Play()
 			window.CurrentTab = tab
+		end)
+		
+		TabButton.MouseEnter:Connect(function()
+			if window.CurrentTab ~= tab then
+				TweenService:Create(TabButton, fastTween, {BackgroundTransparency = 0.05}):Play()
+			end
+		end)
+		
+		TabButton.MouseLeave:Connect(function()
+			if window.CurrentTab ~= tab then
+				TweenService:Create(TabButton, fastTween, {BackgroundTransparency = 0.1}):Play()
+			end
 		end)
 		
 		-- İlk tab'ı aktif et
@@ -228,7 +344,6 @@ function Library:CreateWindow(config)
 			
 			local toggleState = defaultValue
 			
-			-- Toggle Container
 			local ToggleFrame = Instance.new("Frame")
 			ToggleFrame.Name = "ToggleFrame"
 			ToggleFrame.BorderSizePixel = 0
@@ -240,7 +355,6 @@ function Library:CreateWindow(config)
 			local ToggleCorner = Instance.new("UICorner")
 			ToggleCorner.Parent = ToggleFrame
 			
-			-- Toggle Text
 			local ToggleText = Instance.new("TextLabel")
 			ToggleText.Name = "ToggleText"
 			ToggleText.TextXAlignment = Enum.TextXAlignment.Left
@@ -255,7 +369,6 @@ function Library:CreateWindow(config)
 			ToggleText.TextColor3 = Color3.fromRGB(0, 0, 0)
 			ToggleText.Parent = ToggleFrame
 			
-			-- Toggle Switch
 			local ToggleSwitch = Instance.new("TextButton")
 			ToggleSwitch.Name = "ToggleSwitch"
 			ToggleSwitch.ZIndex = 3
@@ -271,7 +384,6 @@ function Library:CreateWindow(config)
 			SwitchCorner.CornerRadius = UDim.new(0, 30)
 			SwitchCorner.Parent = ToggleSwitch
 			
-			-- Toggle Circle
 			local ToggleCircle = Instance.new("Frame")
 			ToggleCircle.Name = "ToggleCircle"
 			ToggleCircle.BorderSizePixel = 0
@@ -284,34 +396,22 @@ function Library:CreateWindow(config)
 			CircleCorner.CornerRadius = UDim.new(0, 50)
 			CircleCorner.Parent = ToggleCircle
 			
-			-- Toggle fonksiyonu
 			local function toggle()
 				toggleState = not toggleState
 				
-				local colorTween = TweenService:Create(
-					ToggleSwitch,
-					tweenInfo,
-					{BackgroundColor3 = toggleState and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(200, 200, 200)}
-				)
+				TweenService:Create(ToggleSwitch, tweenInfo, {
+					BackgroundColor3 = toggleState and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(200, 200, 200)
+				}):Play()
 				
-				local positionTween = TweenService:Create(
-					ToggleCircle,
-					tweenInfo,
-					{Position = toggleState and UDim2.new(0, 24, 0, 2) or UDim2.new(0, 2, 0, 2)}
-				)
-				
-				colorTween:Play()
-				positionTween:Play()
+				TweenService:Create(ToggleCircle, tweenInfo, {
+					Position = toggleState and UDim2.new(0, 24, 0, 2) or UDim2.new(0, 2, 0, 2)
+				}):Play()
 				
 				callback(toggleState)
 			end
 			
-			-- Click event
-			ToggleSwitch.MouseButton1Click:Connect(function()
-				toggle()
-			end)
+			ToggleSwitch.MouseButton1Click:Connect(toggle)
 			
-			-- Return toggle object
 			local toggleObj = {}
 			function toggleObj:SetValue(value)
 				if toggleState ~= value then
@@ -328,20 +428,20 @@ function Library:CreateWindow(config)
 			local buttonName = config.Name or "Button"
 			local callback = config.Callback or function() end
 			
-			-- Button Frame
-			local ButtonFrame = Instance.new("Frame")
+			local ButtonFrame = Instance.new("TextButton")
 			ButtonFrame.Name = "ButtonFrame"
-			ButtonFrame.BorderSizePixel = 0
-			ButtonFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			ButtonFrame.BorderSizePixel = 2
+			ButtonFrame.BorderColor3 = Color3.fromRGB(0, 139, 255)
+			ButtonFrame.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
 			ButtonFrame.Size = UDim2.new(1, 0, 0, 36)
-			ButtonFrame.BackgroundTransparency = 0.1
+			ButtonFrame.AutoButtonColor = false
+			ButtonFrame.Text = ""
 			ButtonFrame.Parent = TabContent
 			
 			local ButtonCorner = Instance.new("UICorner")
 			ButtonCorner.Parent = ButtonFrame
 			
-			-- Button Text
-			local ButtonText = Instance.new("TextButton")
+			local ButtonText = Instance.new("TextLabel")
 			ButtonText.Name = "ButtonText"
 			ButtonText.ZIndex = 2
 			ButtonText.BorderSizePixel = 0
@@ -351,23 +451,216 @@ function Library:CreateWindow(config)
 			ButtonText.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 			ButtonText.Size = UDim2.new(1, -12, 1, 0)
 			ButtonText.Position = UDim2.new(0, 6, 0, 0)
-			ButtonText.Text = buttonName
-			ButtonText.AutoButtonColor = false
+			ButtonText.Text = "▸ " .. buttonName
 			ButtonText.Parent = ButtonFrame
 			
-			-- Click effect
-			ButtonText.MouseButton1Click:Connect(function()
-				local originalTransparency = ButtonFrame.BackgroundTransparency
-				ButtonFrame.BackgroundTransparency = 0.3
+			ButtonFrame.MouseButton1Click:Connect(function()
+				TweenService:Create(ButtonFrame, fastTween, {BackgroundColor3 = Color3.fromRGB(0, 139, 255)}):Play()
+				TweenService:Create(ButtonText, fastTween, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 				
-				TweenService:Create(
-					ButtonFrame,
-					TweenInfo.new(0.2),
-					{BackgroundTransparency = originalTransparency}
-				):Play()
+				task.wait(0.15)
+				
+				TweenService:Create(ButtonFrame, fastTween, {BackgroundColor3 = Color3.fromRGB(240, 240, 240)}):Play()
+				TweenService:Create(ButtonText, fastTween, {TextColor3 = Color3.fromRGB(0, 0, 0)}):Play()
 				
 				callback()
 			end)
+			
+			ButtonFrame.MouseEnter:Connect(function()
+				TweenService:Create(ButtonFrame, fastTween, {BackgroundColor3 = Color3.fromRGB(230, 230, 230)}):Play()
+			end)
+			
+			ButtonFrame.MouseLeave:Connect(function()
+				TweenService:Create(ButtonFrame, fastTween, {BackgroundColor3 = Color3.fromRGB(240, 240, 240)}):Play()
+			end)
+		end
+		
+		-- Input oluşturma
+		function tab:CreateInput(config)
+			config = config or {}
+			local inputName = config.Name or "Input"
+			local placeholder = config.Placeholder or "Enter text..."
+			local callback = config.Callback or function() end
+			
+			local InputFrame = Instance.new("Frame")
+			InputFrame.Name = "InputFrame"
+			InputFrame.BorderSizePixel = 0
+			InputFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			InputFrame.Size = UDim2.new(1, 0, 0, 60)
+			InputFrame.BackgroundTransparency = 0.1
+			InputFrame.Parent = TabContent
+			
+			local InputCorner = Instance.new("UICorner")
+			InputCorner.Parent = InputFrame
+			
+			local InputLabel = Instance.new("TextLabel")
+			InputLabel.Name = "InputLabel"
+			InputLabel.TextXAlignment = Enum.TextXAlignment.Left
+			InputLabel.ZIndex = 2
+			InputLabel.BorderSizePixel = 0
+			InputLabel.TextSize = 14
+			InputLabel.BackgroundTransparency = 1
+			InputLabel.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+			InputLabel.Size = UDim2.new(1, -12, 0, 20)
+			InputLabel.Position = UDim2.new(0, 6, 0, 4)
+			InputLabel.Text = inputName
+			InputLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+			InputLabel.Parent = InputFrame
+			
+			local InputBox = Instance.new("TextBox")
+			InputBox.Name = "InputBox"
+			InputBox.ZIndex = 2
+			InputBox.BorderSizePixel = 2
+			InputBox.BorderColor3 = Color3.fromRGB(0, 139, 255)
+			InputBox.TextSize = 14
+			InputBox.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+			InputBox.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+			InputBox.Size = UDim2.new(1, -12, 0, 28)
+			InputBox.Position = UDim2.new(0, 6, 0, 26)
+			InputBox.PlaceholderText = placeholder
+			InputBox.Text = ""
+			InputBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+			InputBox.ClearTextOnFocus = false
+			InputBox.Parent = InputFrame
+			
+			local InputBoxCorner = Instance.new("UICorner")
+			InputBoxCorner.CornerRadius = UDim.new(0, 6)
+			InputBoxCorner.Parent = InputBox
+			
+			InputBox.FocusLost:Connect(function(enterPressed)
+				if enterPressed then
+					callback(InputBox.Text)
+				end
+			end)
+			
+			InputBox.Focused:Connect(function()
+				TweenService:Create(InputBox, fastTween, {BorderColor3 = Color3.fromRGB(0, 180, 255)}):Play()
+			end)
+			
+			InputBox.FocusLost:Connect(function()
+				TweenService:Create(InputBox, fastTween, {BorderColor3 = Color3.fromRGB(0, 139, 255)}):Play()
+			end)
+		end
+		
+		-- Dropdown oluşturma
+		function tab:CreateDropdown(config)
+			config = config or {}
+			local dropdownName = config.Name or "Dropdown"
+			local options = config.Options or {"Option 1", "Option 2", "Option 3"}
+			local callback = config.Callback or function() end
+			
+			local isOpen = false
+			local selectedOption = options[1] or "Select"
+			
+			local DropdownFrame = Instance.new("Frame")
+			DropdownFrame.Name = "DropdownFrame"
+			DropdownFrame.BorderSizePixel = 0
+			DropdownFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			DropdownFrame.Size = UDim2.new(1, 0, 0, 36)
+			DropdownFrame.BackgroundTransparency = 0.1
+			DropdownFrame.ClipsDescendants = true
+			DropdownFrame.Parent = TabContent
+			
+			local DropdownCorner = Instance.new("UICorner")
+			DropdownCorner.Parent = DropdownFrame
+			
+			local DropdownButton = Instance.new("TextButton")
+			DropdownButton.Name = "DropdownButton"
+			DropdownButton.ZIndex = 2
+			DropdownButton.BorderSizePixel = 0
+			DropdownButton.BackgroundTransparency = 1
+			DropdownButton.Size = UDim2.new(1, 0, 0, 36)
+			DropdownButton.Text = ""
+			DropdownButton.AutoButtonColor = false
+			DropdownButton.Parent = DropdownFrame
+			
+			local DropdownLabel = Instance.new("TextLabel")
+			DropdownLabel.Name = "DropdownLabel"
+			DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+			DropdownLabel.ZIndex = 3
+			DropdownLabel.BorderSizePixel = 0
+			DropdownLabel.TextSize = 15
+			DropdownLabel.BackgroundTransparency = 1
+			DropdownLabel.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+			DropdownLabel.Size = UDim2.new(1, -40, 1, 0)
+			DropdownLabel.Position = UDim2.new(0, 6, 0, 0)
+			DropdownLabel.Text = dropdownName .. ": " .. selectedOption
+			DropdownLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+			DropdownLabel.Parent = DropdownButton
+			
+			local DropdownArrow = Instance.new("TextLabel")
+			DropdownArrow.Name = "DropdownArrow"
+			DropdownArrow.ZIndex = 3
+			DropdownArrow.BorderSizePixel = 0
+			DropdownArrow.BackgroundTransparency = 1
+			DropdownArrow.Size = UDim2.new(0, 30, 1, 0)
+			DropdownArrow.Position = UDim2.new(1, -30, 0, 0)
+			DropdownArrow.Text = "▼"
+			DropdownArrow.TextColor3 = Color3.fromRGB(0, 0, 0)
+			DropdownArrow.TextSize = 14
+			DropdownArrow.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+			DropdownArrow.Parent = DropdownButton
+			
+			local OptionsList = Instance.new("Frame")
+			OptionsList.Name = "OptionsList"
+			OptionsList.ZIndex = 2
+			OptionsList.BorderSizePixel = 0
+			OptionsList.BackgroundTransparency = 1
+			OptionsList.Size = UDim2.new(1, -8, 0, 0)
+			OptionsList.Position = UDim2.new(0, 4, 0, 40)
+			OptionsList.Parent = DropdownFrame
+			
+			local OptionsLayout = Instance.new("UIListLayout")
+			OptionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			OptionsLayout.Padding = UDim.new(0, 2)
+			OptionsLayout.Parent = OptionsList
+			
+			local function toggleDropdown()
+				isOpen = not isOpen
+				local targetSize = isOpen and UDim2.new(1, 0, 0, 36 + (#options * 32) + 8) or UDim2.new(1, 0, 0, 36)
+				local targetRotation = isOpen and 180 or 0
+				
+				TweenService:Create(DropdownFrame, tweenInfo, {Size = targetSize}):Play()
+				TweenService:Create(DropdownArrow, tweenInfo, {Rotation = targetRotation}):Play()
+			end
+			
+			DropdownButton.MouseButton1Click:Connect(toggleDropdown)
+			
+			for i, option in ipairs(options) do
+				local OptionButton = Instance.new("TextButton")
+				OptionButton.Name = "Option_" .. i
+				OptionButton.ZIndex = 3
+				OptionButton.BorderSizePixel = 0
+				OptionButton.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+				OptionButton.Size = UDim2.new(1, 0, 0, 30)
+				OptionButton.Text = option
+				OptionButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+				OptionButton.TextSize = 14
+				OptionButton.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+				OptionButton.AutoButtonColor = false
+				OptionButton.Parent = OptionsList
+				
+				local OptionCorner = Instance.new("UICorner")
+				OptionCorner.CornerRadius = UDim.new(0, 6)
+				OptionCorner.Parent = OptionButton
+				
+				OptionButton.MouseButton1Click:Connect(function()
+					selectedOption = option
+					DropdownLabel.Text = dropdownName .. ": " .. selectedOption
+					toggleDropdown()
+					callback(option)
+				end)
+				
+				OptionButton.MouseEnter:Connect(function()
+					TweenService:Create(OptionButton, fastTween, {BackgroundColor3 = Color3.fromRGB(0, 139, 255)}):Play()
+					TweenService:Create(OptionButton, fastTween, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+				end)
+				
+				OptionButton.MouseLeave:Connect(function()
+					TweenService:Create(OptionButton, fastTween, {BackgroundColor3 = Color3.fromRGB(240, 240, 240)}):Play()
+					TweenService:Create(OptionButton, fastTween, {TextColor3 = Color3.fromRGB(0, 0, 0)}):Play()
+				end)
+			end
 		end
 		
 		return tab
