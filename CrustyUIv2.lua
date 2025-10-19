@@ -12,6 +12,7 @@ Crusty Library V2 - Modern UI Library
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
 
 local Library = {}
 Library.__index = Library
@@ -19,16 +20,36 @@ Library.__index = Library
 -- Tween ayarları
 local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local fastTween = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local notifyTween = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+
+-- Ses çalma fonksiyonu
+local function PlaySound(soundId, volume)
+	if not soundId then return end
+	local sound = Instance.new("Sound")
+	sound.SoundId = soundId
+	sound.Volume = volume or 0.5
+	sound.Parent = SoundService
+	sound:Play()
+	sound.Ended:Connect(function()
+		sound:Destroy()
+	end)
+end
 
 function Library:CreateWindow(config)
 	config = config or {}
 	local windowTitle = config.Title or "Crusty HUB V1"
+	local iconId = config.Icon or "rbxassetid://7734053495"
+	local draggable = config.Draggable ~= false
+	local effectSounds = config.EffectSounds == true
+	local loadSound = "rbxassetid://137759965542959"
+	local notifySound = "rbxassetid://137759965542959"
 	
 	local window = {}
 	window.CurrentTab = nil
 	window.Tabs = {}
 	window.ToggleButton = nil
 	window.MainFrame = nil
+	window.EffectSounds = effectSounds
 	
 	-- ScreenGui oluştur
 	local ScreenGui = Instance.new("ScreenGui")
@@ -36,6 +57,213 @@ function Library:CreateWindow(config)
 	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	ScreenGui.ResetOnSpawn = false
 	ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+	
+	-- Yükleme sesi çal
+	if effectSounds then
+		PlaySound(loadSound, 0.5)
+	end
+	
+	-- Notification Container
+	local NotificationContainer = Instance.new("Frame")
+	NotificationContainer.Name = "NotificationContainer"
+	NotificationContainer.BackgroundTransparency = 1
+	NotificationContainer.Size = UDim2.new(0, 300, 1, 0)
+	NotificationContainer.Position = UDim2.new(1, -320, 0, 20)
+	NotificationContainer.Parent = ScreenGui
+	
+	local NotifyLayout = Instance.new("UIListLayout")
+	NotifyLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	NotifyLayout.Padding = UDim.new(0, 10)
+	NotifyLayout.Parent = NotificationContainer
+	
+	-- Notification fonksiyonu
+	function window:Notify(notifConfig)
+		notifConfig = notifConfig or {}
+		local title = notifConfig.Title or "Notification"
+		local message = notifConfig.Message or "No message provided"
+		local duration = notifConfig.Duration or 3
+		local notifType = notifConfig.Type or "Info"
+		
+		-- Bildirim sesi çal
+		if window.EffectSounds then
+			PlaySound(notifySound, 0.4)
+		end
+		
+		local notifColor = Color3.fromRGB(0, 139, 255)
+		local notifIcon = "ℹ️"
+		
+		if notifType == "Success" then
+			notifColor = Color3.fromRGB(67, 181, 129)
+			notifIcon = "✅"
+		elseif notifType == "Warning" then
+			notifColor = Color3.fromRGB(250, 166, 26)
+			notifIcon = "⚠️"
+		elseif notifType == "Error" then
+			notifColor = Color3.fromRGB(237, 66, 69)
+			notifIcon = "❌"
+		end
+		
+		local NotifFrame = Instance.new("Frame")
+		NotifFrame.Name = "Notification"
+		NotifFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		NotifFrame.BorderSizePixel = 0
+		NotifFrame.Size = UDim2.new(1, 0, 0, 0)
+		NotifFrame.BackgroundTransparency = 0.1
+		NotifFrame.ClipsDescendants = false
+		NotifFrame.Position = UDim2.new(1, 20, 0, 0)
+		NotifFrame.Parent = NotificationContainer
+		
+		local NotifCorner = Instance.new("UICorner")
+		NotifCorner.CornerRadius = UDim.new(0, 10)
+		NotifCorner.Parent = NotifFrame
+		
+		local NotifStroke = Instance.new("UIStroke")
+		NotifStroke.Color = Color3.fromRGB(200, 200, 200)
+		NotifStroke.Thickness = 1
+		NotifStroke.Parent = NotifFrame
+		
+		local NotifBorder = Instance.new("Frame")
+		NotifBorder.Name = "Border"
+		NotifBorder.BackgroundColor3 = notifColor
+		NotifBorder.BorderSizePixel = 0
+		NotifBorder.Size = UDim2.new(0, 4, 1, 0)
+		NotifBorder.Parent = NotifFrame
+		
+		local BorderCorner = Instance.new("UICorner")
+		BorderCorner.CornerRadius = UDim.new(0, 10)
+		BorderCorner.Parent = NotifBorder
+		
+		local NotifIcon = Instance.new("TextLabel")
+		NotifIcon.Name = "Icon"
+		NotifIcon.BackgroundTransparency = 1
+		NotifIcon.Size = UDim2.new(0, 30, 0, 30)
+		NotifIcon.Position = UDim2.new(0, 8, 0, 8)
+		NotifIcon.Font = Enum.Font.GothamBold
+		NotifIcon.Text = notifIcon
+		NotifIcon.TextColor3 = notifColor
+		NotifIcon.TextSize = 18
+		NotifIcon.Parent = NotifFrame
+		
+		local NotifTitle = Instance.new("TextLabel")
+		NotifTitle.Name = "Title"
+		NotifTitle.BackgroundTransparency = 1
+		NotifTitle.Size = UDim2.new(1, -45, 0, 18)
+		NotifTitle.Position = UDim2.new(0, 42, 0, 8)
+		NotifTitle.Font = Enum.Font.GothamBold
+		NotifTitle.Text = title
+		NotifTitle.TextColor3 = Color3.fromRGB(0, 0, 0)
+		NotifTitle.TextSize = 13
+		NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
+		NotifTitle.Parent = NotifFrame
+		
+		local NotifMessage = Instance.new("TextLabel")
+		NotifMessage.Name = "Message"
+		NotifMessage.BackgroundTransparency = 1
+		NotifMessage.Size = UDim2.new(1, -45, 0, 32)
+		NotifMessage.Position = UDim2.new(0, 42, 0, 26)
+		NotifMessage.Font = Enum.Font.Gotham
+		NotifMessage.Text = message
+		NotifMessage.TextColor3 = Color3.fromRGB(100, 100, 100)
+		NotifMessage.TextSize = 11
+		NotifMessage.TextXAlignment = Enum.TextXAlignment.Left
+		NotifMessage.TextYAlignment = Enum.TextYAlignment.Top
+		NotifMessage.TextWrapped = true
+		NotifMessage.Parent = NotifFrame
+		
+		-- Giriş animasyonu
+		TweenService:Create(NotifFrame, notifyTween, {
+			Size = UDim2.new(1, 0, 0, 65),
+			Position = UDim2.new(0, 0, 0, 0)
+		}):Play()
+		
+		-- Çıkış animasyonu
+		task.delay(duration, function()
+			local exitTween = TweenService:Create(NotifFrame, tweenInfo, {
+				Position = UDim2.new(1, 20, 0, 0),
+				BackgroundTransparency = 1
+			})
+			
+			TweenService:Create(NotifTitle, tweenInfo, {TextTransparency = 1}):Play()
+			TweenService:Create(NotifMessage, tweenInfo, {TextTransparency = 1}):Play()
+			TweenService:Create(NotifBorder, tweenInfo, {BackgroundTransparency = 1}):Play()
+			TweenService:Create(NotifIcon, tweenInfo, {TextTransparency = 1}):Play()
+			TweenService:Create(NotifStroke, tweenInfo, {Transparency = 1}):Play()
+			
+			exitTween:Play()
+			
+			task.wait(0.3)
+			NotifFrame:Destroy()
+		end)
+	end
+	
+	-- Toggle Button (Daire - Sürüklenebilir)
+	local ToggleButton = Instance.new("ImageButton")
+	ToggleButton.Name = "ToggleButton"
+	ToggleButton.Image = iconId
+	ToggleButton.Size = UDim2.new(0, 60, 0, 60)
+	ToggleButton.Position = UDim2.new(0, 20, 0.5, -30)
+	ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 139, 255)
+	ToggleButton.BorderSizePixel = 0
+	ToggleButton.ScaleType = Enum.ScaleType.Fit
+	ToggleButton.ImageTransparency = 0.2
+	ToggleButton.Parent = ScreenGui
+	
+	local ToggleCorner = Instance.new("UICorner")
+	ToggleCorner.CornerRadius = UDim.new(1, 0)
+	ToggleCorner.Parent = ToggleButton
+	
+	local ToggleStroke = Instance.new("UIStroke")
+	ToggleStroke.Color = Color3.fromRGB(200, 200, 200)
+	ToggleStroke.Thickness = 3
+	ToggleStroke.Parent = ToggleButton
+	
+	window.ToggleButton = ToggleButton
+	
+	-- Toggle Button sürükleme
+	local toggleDragging = false
+	local toggleDragStart = nil
+	local toggleStartPos = nil
+	
+	ToggleButton.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			toggleDragging = true
+			toggleDragStart = input.Position
+			toggleStartPos = ToggleButton.Position
+			
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					toggleDragging = false
+				end
+			end)
+		end
+	end)
+	
+	UserInputService.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement and toggleDragging then
+			local delta = input.Position - toggleDragStart
+			ToggleButton.Position = UDim2.new(
+				toggleStartPos.X.Scale, toggleStartPos.X.Offset + delta.X,
+				toggleStartPos.Y.Scale, toggleStartPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+	
+	-- Hover efekti
+	ToggleButton.MouseEnter:Connect(function()
+		TweenService:Create(ToggleButton, fastTween, {
+			Size = UDim2.new(0, 67, 0, 67),
+			ImageTransparency = 0
+		}):Play()
+		TweenService:Create(ToggleStroke, fastTween, {Thickness = 4}):Play()
+	end)
+	
+	ToggleButton.MouseLeave:Connect(function()
+		TweenService:Create(ToggleButton, fastTween, {
+			Size = UDim2.new(0, 60, 0, 60),
+			ImageTransparency = 0.2
+		}):Play()
+		TweenService:Create(ToggleStroke, fastTween, {Thickness = 3}):Play()
+	end)
 	
 	-- Ana Frame (Arka plan)
 	local MainFrame = Instance.new("Frame")
@@ -46,12 +274,37 @@ function Library:CreateWindow(config)
 	MainFrame.Position = UDim2.new(0.5, -126, 0.5, -147)
 	MainFrame.BackgroundTransparency = 0.5
 	MainFrame.ClipsDescendants = true
+	MainFrame.Visible = false
 	MainFrame.Parent = ScreenGui
 	
 	window.MainFrame = MainFrame
 	
 	local MainCorner = Instance.new("UICorner")
 	MainCorner.Parent = MainFrame
+	
+	-- Toggle Button tıklama
+	ToggleButton.MouseButton1Click:Connect(function()
+		if MainFrame.Visible then
+			TweenService:Create(MainFrame, tweenInfo, {
+				Size = UDim2.new(0, 0, 0, 0),
+				Position = UDim2.new(0.5, 0, 0.5, 0)
+			}):Play()
+			
+			task.wait(0.3)
+			MainFrame.Visible = false
+			MainFrame.Size = UDim2.new(0, 252, 0, 294)
+			MainFrame.Position = UDim2.new(0.5, -126, 0.5, -147)
+		else
+			MainFrame.Visible = true
+			MainFrame.Size = UDim2.new(0, 0, 0, 0)
+			MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+			
+			TweenService:Create(MainFrame, tweenInfo, {
+				Size = UDim2.new(0, 252, 0, 294),
+				Position = UDim2.new(0.5, -126, 0.5, -147)
+			}):Play()
+		end
+	end)
 	
 	-- Başlık Frame
 	local TitleFrame = Instance.new("Frame")
@@ -66,7 +319,7 @@ function Library:CreateWindow(config)
 	local TitleCorner = Instance.new("UICorner")
 	TitleCorner.Parent = TitleFrame
 	
-	-- Başlık Text
+	-- Başlık Text (Emoji olmadan)
 	local TitleText = Instance.new("TextLabel")
 	TitleText.Name = "TitleText"
 	TitleText.TextXAlignment = Enum.TextXAlignment.Left
@@ -76,8 +329,8 @@ function Library:CreateWindow(config)
 	TitleText.BackgroundTransparency = 1
 	TitleText.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 	TitleText.Size = UDim2.new(1, -40, 1, 0)
-	TitleText.Position = UDim2.new(0, 4, 0, 0)
-	TitleText.Text = "📂 " .. windowTitle
+	TitleText.Position = UDim2.new(0, 8, 0, 0)
+	TitleText.Text = windowTitle
 	TitleText.TextColor3 = Color3.fromRGB(0, 0, 0)
 	TitleText.Parent = TitleFrame
 	
@@ -156,90 +409,38 @@ function Library:CreateWindow(config)
 	local ContentCorner = Instance.new("UICorner")
 	ContentCorner.Parent = ContentContainer
 	
-	-- Dragging System
-	local dragging, dragInput, dragStart, startPos
-	
-	TitleFrame.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
-			dragStart = input.Position
-			startPos = MainFrame.Position
-			
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
-	
-	TitleFrame.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then
-			dragInput = input
-		end
-	end)
-	
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			local delta = input.Position - dragStart
-			MainFrame.Position = UDim2.new(
-				startPos.X.Scale, startPos.X.Offset + delta.X,
-				startPos.Y.Scale, startPos.Y.Offset + delta.Y
-			)
-		end
-	end)
-	
-	-- Toggle Button oluşturma fonksiyonu
-	function window:CreateToggleButton(config)
-		config = config or {}
-		local buttonImage = config.Image or "rbxassetid://7734053495"
-		local buttonSize = config.Size or UDim2.new(0, 50, 0, 50)
-		local buttonPosition = config.Position or UDim2.new(0, 10, 0.5, -25)
+	-- Dragging System (Sadece Draggable true ise)
+	if draggable then
+		local dragging, dragInput, dragStart, startPos
 		
-		local ToggleButton = Instance.new("ImageButton")
-		ToggleButton.Name = "ToggleButton"
-		ToggleButton.Image = buttonImage
-		ToggleButton.Size = buttonSize
-		ToggleButton.Position = buttonPosition
-		ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 139, 255)
-		ToggleButton.BorderSizePixel = 0
-		ToggleButton.Parent = ScreenGui
-		
-		local ToggleCorner = Instance.new("UICorner")
-		ToggleCorner.CornerRadius = UDim.new(0, 12)
-		ToggleCorner.Parent = ToggleButton
-		
-		window.ToggleButton = ToggleButton
-		
-		ToggleButton.MouseButton1Click:Connect(function()
-			if MainFrame.Visible then
-				TweenService:Create(MainFrame, tweenInfo, {
-					Size = UDim2.new(0, 0, 0, 0),
-					Position = UDim2.new(0.5, 0, 0.5, 0)
-				}):Play()
+		TitleFrame.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				dragging = true
+				dragStart = input.Position
+				startPos = MainFrame.Position
 				
-				task.wait(0.3)
-				MainFrame.Visible = false
-				MainFrame.Size = UDim2.new(0, 252, 0, 294)
-				MainFrame.Position = UDim2.new(0.5, -126, 0.5, -147)
-			else
-				MainFrame.Visible = true
-				MainFrame.Size = UDim2.new(0, 0, 0, 0)
-				MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-				
-				TweenService:Create(MainFrame, tweenInfo, {
-					Size = UDim2.new(0, 252, 0, 294),
-					Position = UDim2.new(0.5, -126, 0.5, -147)
-				}):Play()
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						dragging = false
+					end
+				end)
 			end
 		end)
 		
-		ToggleButton.MouseEnter:Connect(function()
-			TweenService:Create(ToggleButton, fastTween, {Size = buttonSize + UDim2.new(0, 5, 0, 5)}):Play()
+		TitleFrame.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement then
+				dragInput = input
+			end
 		end)
 		
-		ToggleButton.MouseLeave:Connect(function()
-			TweenService:Create(ToggleButton, fastTween, {Size = buttonSize}):Play()
+		UserInputService.InputChanged:Connect(function(input)
+			if input == dragInput and dragging then
+				local delta = input.Position - dragStart
+				MainFrame.Position = UDim2.new(
+					startPos.X.Scale, startPos.X.Offset + delta.X,
+					startPos.Y.Scale, startPos.Y.Offset + delta.Y
+				)
+			end
 		end)
 	end
 	
