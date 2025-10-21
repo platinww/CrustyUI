@@ -1,4 +1,4 @@
--- Crusty Tools Library v4.0 (Modern API)
+-- Crusty Tools Library v5.0 (Original Design + Modern API)
 local Library = {}
 
 local Players = game:GetService("Players")
@@ -52,7 +52,7 @@ function NotificationSystem:CreateNotification(title, message, duration)
     TitleLabel.BorderSizePixel = 0
     TitleLabel.TextSize = 14
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
+    TitleLabel.Font = Enum.Font.Arcade
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.Size = UDim2.new(1, -15, 0, 20)
     TitleLabel.Position = UDim2.new(0, 10, 0, 5)
@@ -64,7 +64,7 @@ function NotificationSystem:CreateNotification(title, message, duration)
     MessageLabel.BorderSizePixel = 0
     MessageLabel.TextSize = 11
     MessageLabel.BackgroundTransparency = 1
-    MessageLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
+    MessageLabel.Font = Enum.Font.Arcade
     MessageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     MessageLabel.Size = UDim2.new(1, -15, 1, -30)
     MessageLabel.Position = UDim2.new(0, 10, 0, 25)
@@ -116,27 +116,30 @@ function NotificationSystem:RemoveNotification(notif)
     self:UpdatePositions()
 end
 
--- Main Library
+-- Create Main GUI
 function Library:CreateWindow(config)
     config = config or {}
     local title = config.Title or "UI"
     local subtitle = config.Subtitle or ""
-    local size = config.Size or UDim2.new(0, 250, 0, 350)
+    local size = config.Size or UDim2.new(0, 168, 0, 236)
     
     PlaySound("rbxassetid://137759965542959")
     
     local ScreenGui = Instance.new("ScreenGui", PlayerGui)
-    ScreenGui.Name = "CrustyUI"
+    ScreenGui.Name = "CrustyToolsGUI"
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
     
+    -- Notification Container
     local NotificationContainer = Instance.new("Frame", ScreenGui)
     NotificationContainer.Size = UDim2.new(0, 250, 1, 0)
     NotificationContainer.Position = UDim2.new(1, -270, 0, 20)
     NotificationContainer.BackgroundTransparency = 1
     NotificationSystem.Container = NotificationContainer
     
+    -- Main Frame (Background) - ORIGINAL DESIGN
     local MainFrame = Instance.new("Frame", ScreenGui)
+    MainFrame.Name = "MainFrame"
     MainFrame.BorderSizePixel = 0
     MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     MainFrame.Size = size
@@ -147,43 +150,54 @@ function Library:CreateWindow(config)
     MainFrame.Active = true
     MainFrame.Draggable = true
     
-    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+    local MainCorner = Instance.new("UICorner", MainFrame)
+    MainCorner.CornerRadius = UDim.new(0, 10)
     
-    -- Title
+    -- Title Label
     local TitleLabel = Instance.new("TextLabel", MainFrame)
+    TitleLabel.Name = "TitleLabel"
     TitleLabel.BorderSizePixel = 0
-    TitleLabel.TextSize = 16
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
+    TitleLabel.TextSize = 13
+    TitleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.Font = Enum.Font.Arcade
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.Size = UDim2.new(1, 0, 0, 25)
-    TitleLabel.Position = UDim2.new(0, 0, 0, 5)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Size = UDim2.new(1, 0, 0, 20)
+    TitleLabel.Position = UDim2.new(0, 0, 0, 0)
     TitleLabel.Text = title
     
-    -- Subtitle
-    local SubtitleLabel = Instance.new("TextLabel", MainFrame)
-    SubtitleLabel.BorderSizePixel = 0
-    SubtitleLabel.TextSize = 10
-    SubtitleLabel.BackgroundTransparency = 1
-    SubtitleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
-    SubtitleLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-    SubtitleLabel.Size = UDim2.new(1, 0, 0, 15)
-    SubtitleLabel.Position = UDim2.new(0, 0, 0, 25)
-    SubtitleLabel.Text = subtitle
+    -- Subtitle (if provided)
+    local subtitleOffset = 0
+    if subtitle ~= "" then
+        local SubtitleLabel = Instance.new("TextLabel", MainFrame)
+        SubtitleLabel.BorderSizePixel = 0
+        SubtitleLabel.TextSize = 10
+        SubtitleLabel.BackgroundTransparency = 1
+        SubtitleLabel.Font = Enum.Font.Arcade
+        SubtitleLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        SubtitleLabel.Size = UDim2.new(1, 0, 0, 15)
+        SubtitleLabel.Position = UDim2.new(0, 0, 0, 20)
+        SubtitleLabel.Text = subtitle
+        subtitleOffset = 15
+    end
     
+    -- ScrollingFrame
     local ScrollFrame = Instance.new("ScrollingFrame", MainFrame)
-    ScrollFrame.Size = UDim2.new(1, -20, 1, -55)
-    ScrollFrame.Position = UDim2.new(0, 10, 0, 45)
+    ScrollFrame.Name = "ScrollFrame"
+    ScrollFrame.Size = UDim2.new(1, -20, 1, -(40 + subtitleOffset))
+    ScrollFrame.Position = UDim2.new(0, 10, 0, 25 + subtitleOffset)
     ScrollFrame.BackgroundTransparency = 1
     ScrollFrame.BorderSizePixel = 0
     ScrollFrame.ScrollBarThickness = 4
     ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
     ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    ScrollFrame.ClipsDescendants = true
     
     local UIListLayout = Instance.new("UIListLayout", ScrollFrame)
     UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     UIListLayout.Padding = UDim.new(0, 6)
     
+    -- Update CanvasSize when content changes
     UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
     end)
@@ -200,61 +214,26 @@ function Library:CreateWindow(config)
         return notif
     end
     
-    function WindowObject:CreateButton(config)
-        config = config or {}
-        local text = config.Text or "Button"
-        local callback = config.Callback or function() end
-        
-        local ButtonFrame = Instance.new("Frame", ScrollFrame)
-        ButtonFrame.BorderSizePixel = 0
-        ButtonFrame.BackgroundColor3 = Color3.fromRGB(77, 0, 0)
-        ButtonFrame.Size = UDim2.new(1, 0, 0, 34)
-        ButtonFrame.BackgroundTransparency = 0.2
-        
-        Instance.new("UICorner", ButtonFrame)
-        
-        local ButtonLabel = Instance.new("TextLabel", ButtonFrame)
-        ButtonLabel.BorderSizePixel = 0
-        ButtonLabel.TextSize = 13
-        ButtonLabel.BackgroundTransparency = 1
-        ButtonLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
-        ButtonLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        ButtonLabel.Size = UDim2.new(1, 0, 1, 0)
-        ButtonLabel.Text = text
-        
-        local Button = Instance.new("TextButton", ButtonFrame)
-        Button.Size = UDim2.new(1, 0, 1, 0)
-        Button.BackgroundTransparency = 1
-        Button.Text = ""
-        
-        Button.MouseButton1Click:Connect(function()
-            TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100, 0, 0)}):Play()
-            task.wait(0.1)
-            TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(77, 0, 0)}):Play()
-            callback()
-        end)
-        
-        return {Frame = ButtonFrame}
-    end
-    
     function WindowObject:CreateToggle(config)
         config = config or {}
         local text = config.Text or "Toggle"
         local callback = config.Callback or function() end
         
         local ToggleFrame = Instance.new("Frame", ScrollFrame)
+        ToggleFrame.Name = "Toggle_" .. text
         ToggleFrame.BorderSizePixel = 0
         ToggleFrame.BackgroundColor3 = Color3.fromRGB(77, 0, 0)
         ToggleFrame.Size = UDim2.new(1, 0, 0, 34)
         ToggleFrame.BackgroundTransparency = 0.2
         
-        Instance.new("UICorner", ToggleFrame)
+        local ToggleCorner = Instance.new("UICorner", ToggleFrame)
         
         local ToggleLabel = Instance.new("TextLabel", ToggleFrame)
+        ToggleLabel.Name = "Label"
         ToggleLabel.BorderSizePixel = 0
         ToggleLabel.TextSize = 13
         ToggleLabel.BackgroundTransparency = 1
-        ToggleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
+        ToggleLabel.Font = Enum.Font.Arcade
         ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         ToggleLabel.Size = UDim2.new(1, 0, 1, 0)
         ToggleLabel.Text = text
@@ -262,15 +241,24 @@ function Library:CreateWindow(config)
         local toggleState = false
         
         local ToggleButton = Instance.new("TextButton", ToggleFrame)
+        ToggleButton.Name = "Button"
         ToggleButton.Size = UDim2.new(1, 0, 1, 0)
         ToggleButton.BackgroundTransparency = 1
         ToggleButton.Text = ""
         
         ToggleButton.MouseButton1Click:Connect(function()
             toggleState = not toggleState
-            TweenService:Create(ToggleFrame, TweenInfo.new(0.2), {
-                BackgroundColor3 = toggleState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(77, 0, 0)
-            }):Play()
+            
+            if toggleState then
+                TweenService:Create(ToggleFrame, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+                }):Play()
+            else
+                TweenService:Create(ToggleFrame, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Color3.fromRGB(77, 0, 0)
+                }):Play()
+            end
+            
             callback(toggleState)
         end)
         
@@ -279,9 +267,60 @@ function Library:CreateWindow(config)
             State = function() return toggleState end,
             SetState = function(state)
                 toggleState = state
-                ToggleFrame.BackgroundColor3 = state and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(77, 0, 0)
+                if state then
+                    ToggleFrame.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+                else
+                    ToggleFrame.BackgroundColor3 = Color3.fromRGB(77, 0, 0)
+                end
             end
         }
+    end
+    
+    function WindowObject:CreateButton(config)
+        config = config or {}
+        local text = config.Text or "Button"
+        local callback = config.Callback or function() end
+        
+        local ButtonFrame = Instance.new("Frame", ScrollFrame)
+        ButtonFrame.Name = "Button_" .. text
+        ButtonFrame.BorderSizePixel = 0
+        ButtonFrame.BackgroundColor3 = Color3.fromRGB(77, 0, 0)
+        ButtonFrame.Size = UDim2.new(1, 0, 0, 34)
+        ButtonFrame.BackgroundTransparency = 0.2
+        
+        local ButtonCorner = Instance.new("UICorner", ButtonFrame)
+        
+        local ButtonLabel = Instance.new("TextLabel", ButtonFrame)
+        ButtonLabel.Name = "Label"
+        ButtonLabel.BorderSizePixel = 0
+        ButtonLabel.TextSize = 13
+        ButtonLabel.BackgroundTransparency = 1
+        ButtonLabel.Font = Enum.Font.Arcade
+        ButtonLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ButtonLabel.Size = UDim2.new(1, 0, 1, 0)
+        ButtonLabel.Text = text
+        
+        local Button = Instance.new("TextButton", ButtonFrame)
+        Button.Name = "Button"
+        Button.Size = UDim2.new(1, 0, 1, 0)
+        Button.BackgroundTransparency = 1
+        Button.Text = ""
+        
+        Button.MouseButton1Click:Connect(function()
+            TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {
+                BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+            }):Play()
+            
+            task.wait(0.1)
+            
+            TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {
+                BackgroundColor3 = Color3.fromRGB(77, 0, 0)
+            }):Play()
+            
+            callback()
+        end)
+        
+        return {Frame = ButtonFrame}
     end
     
     function WindowObject:CreateLabel(config)
@@ -300,7 +339,7 @@ function Library:CreateWindow(config)
         Label.BorderSizePixel = 0
         Label.TextSize = 12
         Label.BackgroundTransparency = 1
-        Label.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
+        Label.Font = Enum.Font.Arcade
         Label.TextColor3 = Color3.fromRGB(200, 200, 200)
         Label.Size = UDim2.new(1, -10, 1, 0)
         Label.Position = UDim2.new(0, 5, 0, 0)
