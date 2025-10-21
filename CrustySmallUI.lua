@@ -1,26 +1,24 @@
--- Crusty Tools Library v2.2 (Fixed Everything)
+-- Crusty Tools Library v3.0 (FINAL)
 local Library = {}
 
--- Services
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local SoundService = game:GetService("SoundService")
 
--- Variables
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Sound function for exploit environments
+-- FIXED Sound System
 local function PlaySound(soundId)
-    spawn(function()
-        pcall(function()
-            local sound = Instance.new("Sound")
-            sound.SoundId = soundId
-            sound.Volume = 1
-            sound.Parent = game:GetService("SoundService")
-            sound.PlayOnRemove = false
-            sound:Play()
-            game:GetService("Debris"):AddItem(sound, 5)
+    task.spawn(function()
+        local s,e = pcall(function()
+            local snd = Instance.new("Sound", workspace)
+            snd.SoundId = soundId
+            snd.Volume = 1
+            snd:Play()
+            task.wait(5)
+            snd:Destroy()
         end)
     end)
 end
@@ -33,11 +31,8 @@ NotificationSystem.NotificationSpacing = 10
 
 function NotificationSystem:CreateNotification(title, message, duration)
     duration = duration or 5
-    
-    -- Play notification sound
     PlaySound("rbxassetid://103483400726411")
     
-    -- Create notification frame
     local NotifFrame = Instance.new("Frame")
     NotifFrame.Name = "Notification"
     NotifFrame.BorderSizePixel = 0
@@ -49,24 +44,19 @@ function NotificationSystem:CreateNotification(title, message, duration)
     local NotifCorner = Instance.new("UICorner", NotifFrame)
     NotifCorner.CornerRadius = UDim.new(0, 10)
     
-    -- Accent bar (left side)
     local AccentBar = Instance.new("Frame", NotifFrame)
-    AccentBar.Name = "AccentBar"
     AccentBar.BorderSizePixel = 0
     AccentBar.BackgroundColor3 = Color3.fromRGB(77, 0, 0)
     AccentBar.Size = UDim2.new(0, 4, 1, 0)
-    AccentBar.Position = UDim2.new(0, 0, 0, 0)
     
     local AccentCorner = Instance.new("UICorner", AccentBar)
     AccentCorner.CornerRadius = UDim.new(0, 10)
     
-    -- Title
     local TitleLabel = Instance.new("TextLabel", NotifFrame)
-    TitleLabel.Name = "Title"
     TitleLabel.BorderSizePixel = 0
     TitleLabel.TextSize = 14
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+    TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.Size = UDim2.new(1, -15, 0, 20)
     TitleLabel.Position = UDim2.new(0, 10, 0, 5)
@@ -74,13 +64,11 @@ function NotificationSystem:CreateNotification(title, message, duration)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.TextYAlignment = Enum.TextYAlignment.Top
     
-    -- Message
     local MessageLabel = Instance.new("TextLabel", NotifFrame)
-    MessageLabel.Name = "Message"
     MessageLabel.BorderSizePixel = 0
     MessageLabel.TextSize = 11
     MessageLabel.BackgroundTransparency = 1
-    MessageLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+    MessageLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
     MessageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     MessageLabel.Size = UDim2.new(1, -15, 1, -30)
     MessageLabel.Position = UDim2.new(0, 10, 0, 25)
@@ -89,19 +77,14 @@ function NotificationSystem:CreateNotification(title, message, duration)
     MessageLabel.TextYAlignment = Enum.TextYAlignment.Top
     MessageLabel.TextWrapped = true
     
-    -- Add to notifications table
     table.insert(self.Notifications, NotifFrame)
-    
-    -- Update positions
     self:UpdatePositions()
     
-    -- Slide in animation
     NotifFrame.Position = UDim2.new(1, 20, 0, 0)
     TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Position = UDim2.new(1, -20, 0, 0)
     }):Play()
     
-    -- Auto remove after duration
     task.delay(duration, function()
         self:RemoveNotification(NotifFrame)
     end)
@@ -119,7 +102,6 @@ function NotificationSystem:UpdatePositions()
 end
 
 function NotificationSystem:RemoveNotification(notif)
-    -- Find and remove from table
     for i, n in ipairs(self.Notifications) do
         if n == notif then
             table.remove(self.Notifications, i)
@@ -127,23 +109,18 @@ function NotificationSystem:RemoveNotification(notif)
         end
     end
     
-    -- Slide out animation
     TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
         Position = UDim2.new(1, 20, notif.Position.Y.Scale, notif.Position.Y.Offset)
     }):Play()
     
-    -- Destroy after animation
     task.delay(0.3, function()
         notif:Destroy()
     end)
     
-    -- Update remaining notifications
     self:UpdatePositions()
 end
 
--- Create Main GUI
-function Library:CreateWindow()
-    -- Play UI load sound
+function Library:CreateWindow(title)
     PlaySound("rbxassetid://137759965542959")
     
     local ScreenGui = Instance.new("ScreenGui", PlayerGui)
@@ -151,22 +128,14 @@ function Library:CreateWindow()
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
     
-    -- Notification Container
     local NotificationContainer = Instance.new("Frame", ScreenGui)
-    NotificationContainer.Name = "NotificationContainer"
     NotificationContainer.Size = UDim2.new(0, 250, 1, 0)
     NotificationContainer.Position = UDim2.new(1, -270, 0, 20)
     NotificationContainer.BackgroundTransparency = 1
     
-    -- Update notification system parent
     NotificationSystem.Container = NotificationContainer
-    for _, notif in ipairs(NotificationSystem.Notifications) do
-        notif.Parent = NotificationContainer
-    end
     
-    -- Main Frame (Background) - PERFECTLY CENTERED & DRAGGABLE
     local MainFrame = Instance.new("Frame", ScreenGui)
-    MainFrame.Name = "MainFrame"
     MainFrame.BorderSizePixel = 0
     MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     MainFrame.Size = UDim2.new(0, 168, 0, 236)
@@ -177,25 +146,18 @@ function Library:CreateWindow()
     MainFrame.Active = true
     MainFrame.Draggable = true
     
-    local MainCorner = Instance.new("UICorner", MainFrame)
-    MainCorner.CornerRadius = UDim.new(0, 10)
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
     
-    -- Title Label - ARCADE FONT
     local TitleLabel = Instance.new("TextLabel", MainFrame)
-    TitleLabel.Name = "TitleLabel"
     TitleLabel.BorderSizePixel = 0
     TitleLabel.TextSize = 13
-    TitleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.BackgroundTransparency = 1
+    TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.Size = UDim2.new(1, 0, 0, 30)
-    TitleLabel.Position = UDim2.new(0, 0, 0, 0)
-    TitleLabel.Text = "CRUSTY TOOLS"
+    TitleLabel.Text = title or "UI"
     
-    -- ScrollingFrame
     local ScrollFrame = Instance.new("ScrollingFrame", MainFrame)
-    ScrollFrame.Name = "ScrollFrame"
     ScrollFrame.Size = UDim2.new(1, -20, 1, -40)
     ScrollFrame.Position = UDim2.new(0, 10, 0, 35)
     ScrollFrame.BackgroundTransparency = 1
@@ -203,13 +165,11 @@ function Library:CreateWindow()
     ScrollFrame.ScrollBarThickness = 4
     ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
     ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    ScrollFrame.ClipsDescendants = true
     
     local UIListLayout = Instance.new("UIListLayout", ScrollFrame)
     UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     UIListLayout.Padding = UDim.new(0, 6)
     
-    -- Update CanvasSize when content changes
     UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
     end)
@@ -228,21 +188,18 @@ function Library:CreateWindow()
     
     function WindowObject:AddToggle(text, callback)
         local ToggleFrame = Instance.new("Frame", ScrollFrame)
-        ToggleFrame.Name = "Toggle_" .. text
         ToggleFrame.BorderSizePixel = 0
         ToggleFrame.BackgroundColor3 = Color3.fromRGB(77, 0, 0)
         ToggleFrame.Size = UDim2.new(1, 0, 0, 34)
         ToggleFrame.BackgroundTransparency = 0.2
         
-        local ToggleCorner = Instance.new("UICorner", ToggleFrame)
+        Instance.new("UICorner", ToggleFrame)
         
-        -- ARCADE FONT
         local ToggleLabel = Instance.new("TextLabel", ToggleFrame)
-        ToggleLabel.Name = "Label"
         ToggleLabel.BorderSizePixel = 0
         ToggleLabel.TextSize = 13
         ToggleLabel.BackgroundTransparency = 1
-        ToggleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+        ToggleLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
         ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         ToggleLabel.Size = UDim2.new(1, 0, 1, 0)
         ToggleLabel.Text = text
@@ -250,86 +207,49 @@ function Library:CreateWindow()
         local toggleState = false
         
         local ToggleButton = Instance.new("TextButton", ToggleFrame)
-        ToggleButton.Name = "Button"
         ToggleButton.Size = UDim2.new(1, 0, 1, 0)
         ToggleButton.BackgroundTransparency = 1
         ToggleButton.Text = ""
-        ToggleButton.FontFace = Font.new("rbxasset://fonts/families/Arcade.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
         
         ToggleButton.MouseButton1Click:Connect(function()
             toggleState = not toggleState
-            
-            if toggleState then
-                TweenService:Create(ToggleFrame, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-                }):Play()
-            else
-                TweenService:Create(ToggleFrame, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(77, 0, 0)
-                }):Play()
-            end
-            
-            if callback then
-                callback(toggleState)
-            end
+            TweenService:Create(ToggleFrame, TweenInfo.new(0.2), {
+                BackgroundColor3 = toggleState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(77, 0, 0)
+            }):Play()
+            if callback then callback(toggleState) end
         end)
         
-        return {
-            Frame = ToggleFrame,
-            State = function() return toggleState end,
-            SetState = function(state)
-                toggleState = state
-                if state then
-                    ToggleFrame.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-                else
-                    ToggleFrame.BackgroundColor3 = Color3.fromRGB(77, 0, 0)
-                end
-            end
-        }
+        return {Frame = ToggleFrame, State = function() return toggleState end}
     end
     
     function WindowObject:AddButton(text, callback)
         local ButtonFrame = Instance.new("Frame", ScrollFrame)
-        ButtonFrame.Name = "Button_" .. text
         ButtonFrame.BorderSizePixel = 0
         ButtonFrame.BackgroundColor3 = Color3.fromRGB(77, 0, 0)
         ButtonFrame.Size = UDim2.new(1, 0, 0, 34)
         ButtonFrame.BackgroundTransparency = 0.2
         
-        local ButtonCorner = Instance.new("UICorner", ButtonFrame)
+        Instance.new("UICorner", ButtonFrame)
         
-        -- ARCADE FONT
         local ButtonLabel = Instance.new("TextLabel", ButtonFrame)
-        ButtonLabel.Name = "Label"
         ButtonLabel.BorderSizePixel = 0
         ButtonLabel.TextSize = 13
         ButtonLabel.BackgroundTransparency = 1
-        ButtonLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+        ButtonLabel.FontFace = Font.new("rbxasset://fonts/families/Arcade.json")
         ButtonLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         ButtonLabel.Size = UDim2.new(1, 0, 1, 0)
         ButtonLabel.Text = text
         
         local Button = Instance.new("TextButton", ButtonFrame)
-        Button.Name = "Button"
         Button.Size = UDim2.new(1, 0, 1, 0)
         Button.BackgroundTransparency = 1
         Button.Text = ""
-        Button.FontFace = Font.new("rbxasset://fonts/families/Arcade.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
         
         Button.MouseButton1Click:Connect(function()
-            TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {
-                BackgroundColor3 = Color3.fromRGB(100, 0, 0)
-            }):Play()
-            
-            wait(0.1)
-            
-            TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {
-                BackgroundColor3 = Color3.fromRGB(77, 0, 0)
-            }):Play()
-            
-            if callback then
-                callback()
-            end
+            TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100, 0, 0)}):Play()
+            task.wait(0.1)
+            TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(77, 0, 0)}):Play()
+            if callback then callback() end
         end)
         
         return {Frame = ButtonFrame}
