@@ -1,4 +1,4 @@
--- Crusty Tools Library v2.1 (Fixed Sounds + Centered + Draggable)
+-- Crusty Tools Library v2.2 (Fixed Everything)
 local Library = {}
 
 -- Services
@@ -12,16 +12,15 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 -- Sound function for exploit environments
 local function PlaySound(soundId)
-    pcall(function()
-        local sound = Instance.new("Sound")
-        sound.SoundId = soundId
-        sound.Volume = 0.5
-        sound.Parent = workspace
-        sound:Play()
-        
-        task.spawn(function()
-            task.wait(3)
-            sound:Destroy()
+    spawn(function()
+        pcall(function()
+            local sound = Instance.new("Sound")
+            sound.SoundId = soundId
+            sound.Volume = 1
+            sound.Parent = game:GetService("SoundService")
+            sound.PlayOnRemove = false
+            sound:Play()
+            game:GetService("Debris"):AddItem(sound, 5)
         end)
     end)
 end
@@ -35,7 +34,7 @@ NotificationSystem.NotificationSpacing = 10
 function NotificationSystem:CreateNotification(title, message, duration)
     duration = duration or 5
     
-    -- Play notification sound (exploit-safe)
+    -- Play notification sound
     PlaySound("rbxassetid://103483400726411")
     
     -- Create notification frame
@@ -144,7 +143,7 @@ end
 
 -- Create Main GUI
 function Library:CreateWindow()
-    -- Play UI load sound (exploit-safe)
+    -- Play UI load sound
     PlaySound("rbxassetid://137759965542959")
     
     local ScreenGui = Instance.new("ScreenGui", PlayerGui)
@@ -165,23 +164,23 @@ function Library:CreateWindow()
         notif.Parent = NotificationContainer
     end
     
-    -- Main Frame (Background) - CENTERED
+    -- Main Frame (Background) - PERFECTLY CENTERED & DRAGGABLE
     local MainFrame = Instance.new("Frame", ScreenGui)
     MainFrame.Name = "MainFrame"
     MainFrame.BorderSizePixel = 0
     MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     MainFrame.Size = UDim2.new(0, 168, 0, 236)
-    MainFrame.Position = UDim2.new(0.5, -84, 0.5, -118) -- Centered (half width, half height)
+    MainFrame.Position = UDim2.new(0.5, -84, 0.5, -118)
     MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     MainFrame.BackgroundTransparency = 0.25
     MainFrame.ClipsDescendants = true
     MainFrame.Active = true
-    MainFrame.Draggable = true -- DRAGGABLE
+    MainFrame.Draggable = true
     
     local MainCorner = Instance.new("UICorner", MainFrame)
     MainCorner.CornerRadius = UDim.new(0, 10)
     
-    -- Title Label
+    -- Title Label - ARCADE FONT
     local TitleLabel = Instance.new("TextLabel", MainFrame)
     TitleLabel.Name = "TitleLabel"
     TitleLabel.BorderSizePixel = 0
@@ -237,6 +236,7 @@ function Library:CreateWindow()
         
         local ToggleCorner = Instance.new("UICorner", ToggleFrame)
         
+        -- ARCADE FONT
         local ToggleLabel = Instance.new("TextLabel", ToggleFrame)
         ToggleLabel.Name = "Label"
         ToggleLabel.BorderSizePixel = 0
@@ -254,6 +254,7 @@ function Library:CreateWindow()
         ToggleButton.Size = UDim2.new(1, 0, 1, 0)
         ToggleButton.BackgroundTransparency = 1
         ToggleButton.Text = ""
+        ToggleButton.FontFace = Font.new("rbxasset://fonts/families/Arcade.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
         
         ToggleButton.MouseButton1Click:Connect(function()
             toggleState = not toggleState
@@ -297,6 +298,7 @@ function Library:CreateWindow()
         
         local ButtonCorner = Instance.new("UICorner", ButtonFrame)
         
+        -- ARCADE FONT
         local ButtonLabel = Instance.new("TextLabel", ButtonFrame)
         ButtonLabel.Name = "Label"
         ButtonLabel.BorderSizePixel = 0
@@ -312,6 +314,7 @@ function Library:CreateWindow()
         Button.Size = UDim2.new(1, 0, 1, 0)
         Button.BackgroundTransparency = 1
         Button.Text = ""
+        Button.FontFace = Font.new("rbxasset://fonts/families/Arcade.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
         
         Button.MouseButton1Click:Connect(function()
             TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {
@@ -335,11 +338,6 @@ function Library:CreateWindow()
     function WindowObject:Destroy()
         ScreenGui:Destroy()
     end
-    
-    -- Welcome notification
-    task.delay(0.5, function()
-        WindowObject:Notify("CRUSTY TOOLS", "UI basariyla yuklendi!", 3)
-    end)
     
     return WindowObject
 end
