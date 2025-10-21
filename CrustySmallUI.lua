@@ -1,4 +1,4 @@
--- Crusty Tools Library v2.0 (Bildirim Sistemi Ekli)
+-- Crusty Tools Library v2.1 (Fixed Sounds + Centered + Draggable)
 local Library = {}
 
 -- Services
@@ -10,6 +10,22 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
+-- Sound function for exploit environments
+local function PlaySound(soundId)
+    pcall(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = soundId
+        sound.Volume = 0.5
+        sound.Parent = workspace
+        sound:Play()
+        
+        task.spawn(function()
+            task.wait(3)
+            sound:Destroy()
+        end)
+    end)
+end
+
 -- Notification System
 local NotificationSystem = {}
 NotificationSystem.Notifications = {}
@@ -19,13 +35,8 @@ NotificationSystem.NotificationSpacing = 10
 function NotificationSystem:CreateNotification(title, message, duration)
     duration = duration or 5
     
-    -- Play notification sound
-    local sound = Instance.new("Sound")
-    sound.SoundId = "rbxassetid://103483400726411"
-    sound.Volume = 0.5
-    sound.Parent = game:GetService("SoundService")
-    sound:Play()
-    game:GetService("Debris"):AddItem(sound, 3)
+    -- Play notification sound (exploit-safe)
+    PlaySound("rbxassetid://103483400726411")
     
     -- Create notification frame
     local NotifFrame = Instance.new("Frame")
@@ -133,13 +144,8 @@ end
 
 -- Create Main GUI
 function Library:CreateWindow()
-    -- Play UI load sound
-    local loadSound = Instance.new("Sound")
-    loadSound.SoundId = "rbxassetid://137759965542959"
-    loadSound.Volume = 0.5
-    loadSound.Parent = game:GetService("SoundService")
-    loadSound:Play()
-    game:GetService("Debris"):AddItem(loadSound, 3)
+    -- Play UI load sound (exploit-safe)
+    PlaySound("rbxassetid://137759965542959")
     
     local ScreenGui = Instance.new("ScreenGui", PlayerGui)
     ScreenGui.Name = "CrustyToolsGUI"
@@ -159,15 +165,18 @@ function Library:CreateWindow()
         notif.Parent = NotificationContainer
     end
     
-    -- Main Frame (Background)
+    -- Main Frame (Background) - CENTERED
     local MainFrame = Instance.new("Frame", ScreenGui)
     MainFrame.Name = "MainFrame"
     MainFrame.BorderSizePixel = 0
     MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     MainFrame.Size = UDim2.new(0, 168, 0, 236)
-    MainFrame.Position = UDim2.new(0, 298, 0, -16)
+    MainFrame.Position = UDim2.new(0.5, -84, 0.5, -118) -- Centered (half width, half height)
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     MainFrame.BackgroundTransparency = 0.25
     MainFrame.ClipsDescendants = true
+    MainFrame.Active = true
+    MainFrame.Draggable = true -- DRAGGABLE
     
     local MainCorner = Instance.new("UICorner", MainFrame)
     MainCorner.CornerRadius = UDim.new(0, 10)
@@ -204,42 +213,6 @@ function Library:CreateWindow()
     -- Update CanvasSize when content changes
     UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
-    end)
-    
-    -- Dragging functionality
-    local dragging = false
-    local dragInput, mousePos, framePos
-    
-    MainFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            mousePos = input.Position
-            framePos = MainFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    
-    MainFrame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - mousePos
-            MainFrame.Position = UDim2.new(
-                framePos.X.Scale,
-                framePos.X.Offset + delta.X,
-                framePos.Y.Scale,
-                framePos.Y.Offset + delta.Y
-            )
-        end
     end)
     
     local WindowObject = {}
@@ -362,6 +335,12 @@ function Library:CreateWindow()
     function WindowObject:Destroy()
         ScreenGui:Destroy()
     end
+    
+    -- Welcome notification
+    task.delay(0.5, function()
+        WindowObject:Notify("CRUSTY TOOLS", "UI basariyla yuklendi!", 3)
+    end)
+    
     return WindowObject
 end
 
