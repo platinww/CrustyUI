@@ -12,6 +12,7 @@ designed using localmaze gui creator - converted to library
 local Library = {}
 local CollectionService = game:GetService("CollectionService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 function Library:Create(config)
     local GUI = {}
@@ -22,6 +23,7 @@ function Library:Create(config)
     local toggleImageId = toggleButtonConfig.ImageId or "rbxassetid://0"
     local togglePosition = toggleButtonConfig.Position or UDim2.new(0, 10, 0.5, -25)
     local toggleSize = toggleButtonConfig.Size or UDim2.new(0, 50, 0, 50)
+    local UIDraggable = toggleButtonConfig.Draggable ~= nil and toggleButtonConfig.Draggable or false
     
     -- Ana ScreenGui oluştur
     local ScreenGui = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
@@ -40,14 +42,48 @@ function Library:Create(config)
     local ToggleOpenCorner = Instance.new("UICorner", ToggleOpenButton)
     ToggleOpenCorner.CornerRadius = UDim.new(1, 0)
     
-    -- Ana Frame (Arka Plan)
+    -- Toggle Butonu Draggable
+    local dragging = false
+    local dragInput
+    local dragStart
+    local startPos
+    
+    ToggleOpenButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = ToggleOpenButton.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    ToggleOpenButton.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            ToggleOpenButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    
+    -- Ana Frame (Arka Plan) - Ekranın ortasına sabitlendi
     local MainFrame = Instance.new("Frame", ScreenGui)
     MainFrame.BorderSizePixel = 0
     MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     MainFrame.Size = UDim2.new(0, 250, 0, 284)
-    MainFrame.Position = UDim2.new(0, 274, 0, -30)
-    MainFrame.BackgroundTransparency = 0.5
+    MainFrame.Position = UDim2.new(0.5, -125, 0.5, -142)
+    MainFrame.BackgroundTransparency = 0.3
     MainFrame.Visible = true
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     
     local MainCorner = Instance.new("UICorner", MainFrame)
     
@@ -56,9 +92,10 @@ function Library:Create(config)
     TopFrame.BorderSizePixel = 0
     TopFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     TopFrame.Size = UDim2.new(0, 250, 0, 36)
-    TopFrame.Position = UDim2.new(0, 274, 0, -30)
+    TopFrame.Position = UDim2.new(0.5, -125, 0.5, -142)
     TopFrame.BackgroundTransparency = 0.1
     TopFrame.Visible = true
+    TopFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     
     local TopCorner = Instance.new("UICorner", TopFrame)
     
@@ -73,18 +110,20 @@ function Library:Create(config)
     Title.BackgroundTransparency = 100
     Title.Size = UDim2.new(0, 230, 0, 32)
     Title.Text = "📂 Crusty HUB V1"
-    Title.Position = UDim2.new(0, 284, 0, -28)
+    Title.Position = UDim2.new(0.5, -115, 0.5, -136)
     Title.AutoButtonColor = false
     Title.Visible = true
+    Title.AnchorPoint = Vector2.new(0.5, 0.5)
     
     -- Tab Butonları Container
     local TabContainer = Instance.new("Frame", ScreenGui)
     TabContainer.BorderSizePixel = 0
     TabContainer.BackgroundTransparency = 1
     TabContainer.Size = UDim2.new(0, 232, 0, 26)
-    TabContainer.Position = UDim2.new(0, 282, 0, 12)
+    TabContainer.Position = UDim2.new(0.5, -116, 0.5, -100)
     TabContainer.ZIndex = 2
     TabContainer.Visible = true
+    TabContainer.AnchorPoint = Vector2.new(0.5, 0.5)
     
     -- Tab Butonları
     local StealingTab = Instance.new("TextButton", TabContainer)
@@ -127,10 +166,95 @@ function Library:Create(config)
         frame.BorderSizePixel = 0
         frame.BackgroundTransparency = 1
         frame.Size = UDim2.new(0, 238, 0, 200)
-        frame.Position = UDim2.new(0, 280, 0, 44)
+        frame.Position = UDim2.new(0.5, -119, 0.5, -68)
         frame.Visible = false
+        frame.AnchorPoint = Vector2.new(0.5, 0.5)
     end
     ContentFrames["Stealing"].Visible = true
+    
+    -- GUI Draggable Sistemi
+    if UIDraggable then
+        local guiDragging = false
+        local guiDragInput
+        local guiDragStart
+        local guiStartPos
+        
+        local function updatePositions(delta)
+            -- MainFrame
+            MainFrame.Position = UDim2.new(
+                guiStartPos.MainFrame.X.Scale,
+                guiStartPos.MainFrame.X.Offset + delta.X,
+                guiStartPos.MainFrame.Y.Scale,
+                guiStartPos.MainFrame.Y.Offset + delta.Y
+            )
+            -- TopFrame
+            TopFrame.Position = UDim2.new(
+                guiStartPos.TopFrame.X.Scale,
+                guiStartPos.TopFrame.X.Offset + delta.X,
+                guiStartPos.TopFrame.Y.Scale,
+                guiStartPos.TopFrame.Y.Offset + delta.Y
+            )
+            -- Title
+            Title.Position = UDim2.new(
+                guiStartPos.Title.X.Scale,
+                guiStartPos.Title.X.Offset + delta.X,
+                guiStartPos.Title.Y.Scale,
+                guiStartPos.Title.Y.Offset + delta.Y
+            )
+            -- TabContainer
+            TabContainer.Position = UDim2.new(
+                guiStartPos.TabContainer.X.Scale,
+                guiStartPos.TabContainer.X.Offset + delta.X,
+                guiStartPos.TabContainer.Y.Scale,
+                guiStartPos.TabContainer.Y.Offset + delta.Y
+            )
+            -- ContentFrames
+            for name, frame in pairs(ContentFrames) do
+                frame.Position = UDim2.new(
+                    guiStartPos.ContentFrames[name].X.Scale,
+                    guiStartPos.ContentFrames[name].X.Offset + delta.X,
+                    guiStartPos.ContentFrames[name].Y.Scale,
+                    guiStartPos.ContentFrames[name].Y.Offset + delta.Y
+                )
+            end
+        end
+        
+        TopFrame.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                guiDragging = true
+                guiDragStart = input.Position
+                guiStartPos = {
+                    MainFrame = MainFrame.Position,
+                    TopFrame = TopFrame.Position,
+                    Title = Title.Position,
+                    TabContainer = TabContainer.Position,
+                    ContentFrames = {}
+                }
+                for name, frame in pairs(ContentFrames) do
+                    guiStartPos.ContentFrames[name] = frame.Position
+                end
+                
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        guiDragging = false
+                    end
+                end)
+            end
+        end)
+        
+        TopFrame.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                guiDragInput = input
+            end
+        end)
+        
+        UserInputService.InputChanged:Connect(function(input)
+            if input == guiDragInput and guiDragging then
+                local delta = input.Position - guiDragStart
+                updatePositions(delta)
+            end
+        end)
+    end
     
     -- Toggle Açma/Kapama Fonksiyonu
     local UIOpen = true
