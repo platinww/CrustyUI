@@ -1,13 +1,26 @@
--- Crusty HUB Library V1
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
+--[=[
+ d888b  db    db d888888b      .d888b.      db      db    db  .d8b.  
+88' Y8b 88    88   `88'        VP  `8D      88      88    88 d8' `8b 
+88      88    88    88            odD'      88      88    88 88ooo88 
+88  ooo 88    88    88          .88'        88      88    88 88~~~88 
+88. ~8~ 88b  d88   .88.        j88.         88booo. 88b  d88 88   88    @uniquadev
+ Y888P  ~Y8888P' Y888888P      888888D      Y88888P ~Y8888P' YP   YP  LIBRARY 
+
+designed using localmaze gui creator - converted to library
+]=]
 
 local Library = {}
+local CollectionService = game:GetService("CollectionService")
+local TweenService = game:GetService("TweenService")
 
-function Library:CreateWindow(title)
+function Library:Create()
+    local GUI = {}
+    local CurrentTab = "Stealing"
+    
+    -- Ana ScreenGui oluştur
     local ScreenGui = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.ResetOnSpawn = false
+    CollectionService:AddTag(ScreenGui, "main")
     
     -- Ana Frame (Arka Plan)
     local MainFrame = Instance.new("Frame", ScreenGui)
@@ -19,306 +32,192 @@ function Library:CreateWindow(title)
     
     local MainCorner = Instance.new("UICorner", MainFrame)
     
-    -- Üst Frame (Header)
-    local HeaderFrame = Instance.new("Frame", ScreenGui)
-    HeaderFrame.BorderSizePixel = 0
-    HeaderFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    HeaderFrame.Size = UDim2.new(0, 250, 0, 36)
-    HeaderFrame.Position = UDim2.new(0, 274, 0, -30)
-    HeaderFrame.BackgroundTransparency = 0.1
+    -- Üst Beyaz Frame
+    local TopFrame = Instance.new("Frame", ScreenGui)
+    TopFrame.BorderSizePixel = 0
+    TopFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    TopFrame.Size = UDim2.new(0, 250, 0, 36)
+    TopFrame.Position = UDim2.new(0, 274, 0, -30)
+    TopFrame.BackgroundTransparency = 0.1
     
-    local HeaderCorner = Instance.new("UICorner", HeaderFrame)
+    local TopCorner = Instance.new("UICorner", TopFrame)
     
-    -- Title Button
-    local TitleButton = Instance.new("TextButton", ScreenGui)
-    TitleButton.BorderSizePixel = 0
-    TitleButton.TextXAlignment = Enum.TextXAlignment.Left
-    TitleButton.TextSize = 15
-    TitleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TitleButton.FontFace = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    TitleButton.ZIndex = 2
-    TitleButton.BackgroundTransparency = 100
-    TitleButton.Size = UDim2.new(0, 230, 0, 32)
-    TitleButton.Text = title or "📂 Crusty HUB V1"
-    TitleButton.Position = UDim2.new(0, 284, 0, -28)
+    -- Başlık
+    local Title = Instance.new("TextButton", ScreenGui)
+    Title.BorderSizePixel = 0
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.TextSize = 15
+    Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Title.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    Title.ZIndex = 2
+    Title.BackgroundTransparency = 100
+    Title.Size = UDim2.new(0, 230, 0, 32)
+    Title.Text = "📂 Crusty HUB V1"
+    Title.Position = UDim2.new(0, 284, 0, -28)
+    Title.AutoButtonColor = false
     
-    -- Sürükleme Sistemi
-    local dragging = false
-    local dragInput, mousePos, framePos
+    -- Tab Butonları Container
+    local TabContainer = Instance.new("Frame", ScreenGui)
+    TabContainer.BorderSizePixel = 0
+    TabContainer.BackgroundTransparency = 1
+    TabContainer.Size = UDim2.new(0, 232, 0, 26)
+    TabContainer.Position = UDim2.new(0, 282, 0, 12)
+    TabContainer.ZIndex = 2
     
-    TitleButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            mousePos = input.Position
-            framePos = MainFrame.Position
+    -- Tab Butonları
+    local StealingTab = Instance.new("TextButton", TabContainer)
+    StealingTab.BorderSizePixel = 0
+    StealingTab.TextSize = 14
+    StealingTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    StealingTab.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    StealingTab.Size = UDim2.new(0, 74, 0, 26)
+    StealingTab.Text = "⚡ Stealing"
+    StealingTab.Position = UDim2.new(0, 0, 0, 0)
+    local StealingCorner = Instance.new("UICorner", StealingTab)
+    
+    local VisualTab = Instance.new("TextButton", TabContainer)
+    VisualTab.BorderSizePixel = 0
+    VisualTab.TextSize = 14
+    VisualTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    VisualTab.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    VisualTab.Size = UDim2.new(0, 76, 0, 26)
+    VisualTab.Text = "👁️ Visual"
+    VisualTab.Position = UDim2.new(0, 80, 0, 0)
+    local VisualCorner = Instance.new("UICorner", VisualTab)
+    
+    local PlayerTab = Instance.new("TextButton", TabContainer)
+    PlayerTab.BorderSizePixel = 0
+    PlayerTab.TextSize = 14
+    PlayerTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    PlayerTab.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    PlayerTab.Size = UDim2.new(0, 74, 0, 26)
+    PlayerTab.Text = "👥 Player"
+    PlayerTab.Position = UDim2.new(0, 162, 0, 0)
+    local PlayerCorner = Instance.new("UICorner", PlayerTab)
+    
+    -- İçerik Frameleri
+    local ContentFrames = {}
+    ContentFrames["Stealing"] = Instance.new("Frame", ScreenGui)
+    ContentFrames["Visual"] = Instance.new("Frame", ScreenGui)
+    ContentFrames["Player"] = Instance.new("Frame", ScreenGui)
+    
+    for _, frame in pairs(ContentFrames) do
+        frame.BorderSizePixel = 0
+        frame.BackgroundTransparency = 1
+        frame.Size = UDim2.new(0, 238, 0, 200)
+        frame.Position = UDim2.new(0, 280, 0, 44)
+        frame.Visible = false
+    end
+    ContentFrames["Stealing"].Visible = true
+    
+    -- Tab Değiştirme Fonksiyonu
+    local function SwitchTab(tabName)
+        CurrentTab = tabName
+        for name, frame in pairs(ContentFrames) do
+            frame.Visible = (name == tabName)
+        end
+    end
+    
+    StealingTab.MouseButton1Click:Connect(function() SwitchTab("Stealing") end)
+    VisualTab.MouseButton1Click:Connect(function() SwitchTab("Visual") end)
+    PlayerTab.MouseButton1Click:Connect(function() SwitchTab("Player") end)
+    
+    -- Toggle Oluşturma Fonksiyonu
+    function GUI:CreateToggle(config)
+        local tab = config.Tab or "Stealing"
+        local text = config.Text or "Toggle"
+        local callback = config.Callback or function() end
+        local default = config.Default or false
+        
+        local toggleData = {Value = default}
+        
+        -- Toggle Container
+        local Container = Instance.new("Frame", ContentFrames[tab])
+        Container.BorderSizePixel = 0
+        Container.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Container.Size = UDim2.new(0, 238, 0, 36)
+        Container.BackgroundTransparency = 0.1
+        local ContainerCorner = Instance.new("UICorner", Container)
+        
+        -- Toggle Butonu
+        local ToggleButton = Instance.new("TextButton", Container)
+        ToggleButton.BorderSizePixel = 0
+        ToggleButton.TextXAlignment = Enum.TextXAlignment.Left
+        ToggleButton.TextSize = 15
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        ToggleButton.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        ToggleButton.BackgroundTransparency = 1
+        ToggleButton.Size = UDim2.new(1, -50, 1, 0)
+        ToggleButton.Text = text
+        ToggleButton.Position = UDim2.new(0, 4, 0, 0)
+        ToggleButton.AutoButtonColor = false
+        
+        -- Toggle Switch (Dış Frame)
+        local ToggleSwitch = Instance.new("Frame", Container)
+        ToggleSwitch.Active = true
+        ToggleSwitch.ZIndex = 3
+        ToggleSwitch.BorderSizePixel = 0
+        ToggleSwitch.BackgroundColor3 = default and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(200, 200, 200)
+        ToggleSwitch.Size = UDim2.new(0, 44, 0, 20)
+        ToggleSwitch.Position = UDim2.new(1, -48, 0.5, -10)
+        local SwitchCorner = Instance.new("UICorner", ToggleSwitch)
+        SwitchCorner.CornerRadius = UDim.new(0, 30)
+        
+        -- Toggle Circle (İç Daire)
+        local ToggleCircle = Instance.new("Frame", ToggleSwitch)
+        ToggleCircle.BorderSizePixel = 0
+        ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        ToggleCircle.Size = UDim2.new(0, 18, 0, 16)
+        ToggleCircle.Position = default and UDim2.new(0, 24, 0, 2) or UDim2.new(0, 2, 0, 2)
+        local CircleCorner = Instance.new("UICorner", ToggleCircle)
+        CircleCorner.CornerRadius = UDim.new(0, 50)
+        
+        -- Toggle Animasyonu
+        local function Toggle()
+            toggleData.Value = not toggleData.Value
             
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-    
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if dragging and dragInput then
-            local delta = dragInput.Position - mousePos
-            local targetPos = UDim2.new(
-                framePos.X.Scale,
-                framePos.X.Offset + delta.X,
-                framePos.Y.Scale,
-                framePos.Y.Offset + delta.Y
+            local circleTween = TweenService:Create(
+                ToggleCircle,
+                TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {Position = toggleData.Value and UDim2.new(0, 24, 0, 2) or UDim2.new(0, 2, 0, 2)}
             )
             
-            MainFrame.Position = targetPos
-            HeaderFrame.Position = targetPos
-            TitleButton.Position = UDim2.new(targetPos.X.Scale, targetPos.X.Offset + 10, targetPos.Y.Scale, targetPos.Y.Offset + 2)
+            local switchTween = TweenService:Create(
+                ToggleSwitch,
+                TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {BackgroundColor3 = toggleData.Value and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(200, 200, 200)}
+            )
             
-            -- Tab butonlarını da taşı
-            for _, child in pairs(ScreenGui:GetChildren()) do
-                if child.Name == "TabButton" then
-                    local offset = child:GetAttribute("OffsetFromMain")
-                    if offset then
-                        child.Position = UDim2.new(targetPos.X.Scale, targetPos.X.Offset + offset.X, targetPos.Y.Scale, targetPos.Y.Offset + offset.Y)
-                    end
-                end
+            circleTween:Play()
+            switchTween:Play()
+            
+            callback(toggleData.Value)
+        end
+        
+        ToggleButton.MouseButton1Click:Connect(Toggle)
+        ToggleSwitch.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Toggle()
+            end
+        end)
+        
+        function toggleData:SetValue(value)
+            if self.Value ~= value then
+                Toggle()
             end
         end
-    end)
-    
-    local Window = {
-        ScreenGui = ScreenGui,
-        MainFrame = MainFrame,
-        HeaderFrame = HeaderFrame,
-        CurrentTab = nil,
-        Tabs = {},
-        TabButtons = {},
-        TabYOffset = 12
-    }
-    
-    return Window
-end
-
-function Library:AddTab(window, tabName, icon)
-    local tabIcon = icon or "📂"
-    local tabButton = Instance.new("TextButton", window.ScreenGui)
-    tabButton.Name = "TabButton"
-    tabButton.BorderSizePixel = 0
-    tabButton.TextSize = 14
-    tabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    tabButton.FontFace = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    tabButton.ZIndex = 2
-    tabButton.Size = UDim2.new(0, 74, 0, 26)
-    tabButton.Text = tabIcon .. " " .. tabName
-    tabButton.Position = UDim2.new(0, window.MainFrame.Position.X.Offset + 8, 0, window.TabYOffset)
-    
-    -- Pozisyon offset'ini kaydet
-    tabButton:SetAttribute("OffsetFromMain", {X = 8, Y = window.TabYOffset})
-    
-    local tabCorner = Instance.new("UICorner", tabButton)
-    
-    -- Tab için içerik frame'i
-    local contentFrame = Instance.new("Frame", window.ScreenGui)
-    contentFrame.BorderSizePixel = 0
-    contentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    contentFrame.Size = UDim2.new(0, 238, 0, 36)
-    contentFrame.Position = UDim2.new(0, window.MainFrame.Position.X.Offset + 6, 0, 44)
-    contentFrame.BackgroundTransparency = 0.1
-    contentFrame.Visible = false
-    
-    local contentCorner = Instance.new("UICorner", contentFrame)
-    
-    local Tab = {
-        Name = tabName,
-        Button = tabButton,
-        ContentFrame = contentFrame,
-        Elements = {},
-        ElementYOffset = 0
-    }
-    
-    table.insert(window.Tabs, Tab)
-    table.insert(window.TabButtons, tabButton)
-    
-    window.TabYOffset = window.TabYOffset + 80
-    
-    -- Tab değiştirme animasyonu
-    tabButton.MouseButton1Click:Connect(function()
-        -- Animasyon ile büyüt-küçült
-        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local shrink = TweenService:Create(tabButton, tweenInfo, {Size = UDim2.new(0, 70, 0, 24)})
-        local grow = TweenService:Create(tabButton, tweenInfo, {Size = UDim2.new(0, 74, 0, 26)})
         
-        shrink:Play()
-        shrink.Completed:Wait()
-        grow:Play()
-        
-        -- Tüm tab'ları gizle
-        for _, tab in pairs(window.Tabs) do
-            tab.ContentFrame.Visible = false
-            tab.Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        end
-        
-        -- Seçili tab'ı göster
-        contentFrame.Visible = true
-        tabButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-        window.CurrentTab = Tab
-    end)
-    
-    -- İlk tab'ı otomatik seç
-    if #window.Tabs == 1 then
-        tabButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-        contentFrame.Visible = true
-        window.CurrentTab = Tab
+        return toggleData
     end
     
-    return Tab
-end
-
-function Library:AddToggle(tab, text, default, callback)
-    local isToggled = default or false
-    
-    -- Toggle Frame
-    local toggleFrame = Instance.new("Frame", tab.ContentFrame)
-    toggleFrame.Active = true
-    toggleFrame.ZIndex = 3
-    toggleFrame.BorderSizePixel = 0
-    toggleFrame.BackgroundColor3 = isToggled and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(100, 100, 100)
-    toggleFrame.Size = UDim2.new(0, 44, 0, 20)
-    toggleFrame.Position = UDim2.new(0, 190, 0, tab.ElementYOffset + 8)
-    
-    local toggleCorner = Instance.new("UICorner", toggleFrame)
-    toggleCorner.CornerRadius = UDim.new(0, 30)
-    
-    -- Toggle İç Frame (Kaydırıcı)
-    local toggleInner = Instance.new("Frame", toggleFrame)
-    toggleInner.BorderSizePixel = 0
-    toggleInner.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    toggleInner.Size = UDim2.new(0, 18, 0, 16)
-    toggleInner.Position = isToggled and UDim2.new(0, 24, 0, 2) or UDim2.new(0, 2, 0, 2)
-    
-    local innerCorner = Instance.new("UICorner", toggleInner)
-    innerCorner.CornerRadius = UDim.new(0, 50)
-    
-    -- Toggle Butonu
-    local toggleButton = Instance.new("TextButton", tab.ContentFrame)
-    toggleButton.BorderSizePixel = 0
-    toggleButton.TextXAlignment = Enum.TextXAlignment.Left
-    toggleButton.TextSize = 15
-    toggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    toggleButton.FontFace = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    toggleButton.ZIndex = 2
-    toggleButton.BackgroundTransparency = 100
-    toggleButton.Size = UDim2.new(0, 180, 0, 32)
-    toggleButton.Text = text
-    toggleButton.Position = UDim2.new(0, 10, 0, tab.ElementYOffset)
-    
-    -- Toggle İşlevi
-    local function toggle()
-        isToggled = not isToggled
-        
-        -- Animasyonlu geçiş
-        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        
-        local colorTween = TweenService:Create(toggleFrame, tweenInfo, {
-            BackgroundColor3 = isToggled and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(100, 100, 100)
-        })
-        
-        local positionTween = TweenService:Create(toggleInner, tweenInfo, {
-            Position = isToggled and UDim2.new(0, 24, 0, 2) or UDim2.new(0, 2, 0, 2)
-        })
-        
-        colorTween:Play()
-        positionTween:Play()
-        
-        if callback then
-            callback(isToggled)
-        end
+    -- Auto Layout için UIListLayout ekle
+    for _, frame in pairs(ContentFrames) do
+        local layout = Instance.new("UIListLayout", frame)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Padding = UDim.new(0, 6)
     end
     
-    toggleButton.MouseButton1Click:Connect(toggle)
-    toggleFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            toggle()
-        end
-    end)
-    
-    tab.ElementYOffset = tab.ElementYOffset + 42
-    
-    -- Eğer çok fazla element varsa yeni frame ekle
-    if tab.ElementYOffset > 150 then
-        local newFrame = Instance.new("Frame", tab.ContentFrame)
-        newFrame.BorderSizePixel = 0
-        newFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        newFrame.Size = UDim2.new(0, 238, 0, 36)
-        newFrame.Position = UDim2.new(0, 0, 0, 42)
-        newFrame.BackgroundTransparency = 0.1
-        
-        local newCorner = Instance.new("UICorner", newFrame)
-        
-        tab.ContentFrame = newFrame
-        tab.ElementYOffset = 0
-    end
-    
-    return {
-        Toggle = toggle,
-        SetState = function(state)
-            if state ~= isToggled then
-                toggle()
-            end
-        end
-    }
-end
-
-function Library:AddButton(tab, text, callback)
-    local button = Instance.new("TextButton", tab.ContentFrame)
-    button.BorderSizePixel = 0
-    button.TextXAlignment = Enum.TextXAlignment.Left
-    button.TextSize = 15
-    button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    button.FontFace = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    button.ZIndex = 2
-    button.BackgroundTransparency = 100
-    button.Size = UDim2.new(0, 230, 0, 32)
-    button.Text = text
-    button.Position = UDim2.new(0, 10, 0, tab.ElementYOffset)
-    
-    -- Hover efekti
-    button.MouseEnter:Connect(function()
-        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local tween = TweenService:Create(button, tweenInfo, {BackgroundTransparency = 0.9})
-        tween:Play()
-    end)
-    
-    button.MouseLeave:Connect(function()
-        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local tween = TweenService:Create(button, tweenInfo, {BackgroundTransparency = 100})
-        tween:Play()
-    end)
-    
-    -- Tıklama animasyonu
-    button.MouseButton1Click:Connect(function()
-        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local shrink = TweenService:Create(button, tweenInfo, {Size = UDim2.new(0, 225, 0, 30)})
-        local grow = TweenService:Create(button, tweenInfo, {Size = UDim2.new(0, 230, 0, 32)})
-        
-        shrink:Play()
-        shrink.Completed:Wait()
-        grow:Play()
-        
-        if callback then
-            callback()
-        end
-    end)
-    
-    tab.ElementYOffset = tab.ElementYOffset + 42
-    
-    return button
+    return GUI
 end
 
 return Library
