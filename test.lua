@@ -67,7 +67,7 @@ function Library:Create(config)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     CollectionService:AddTag(ScreenGui, "main")
     
-    -- Toggle Butonu (Açma/Kapama) - Ekranın sol üst köşesinde, sürüklenebilir
+    -- Toggle Butonu (Açma/Kapama) - Ekranın sol üst köşesinde
     local ToggleOpenButton = Instance.new("ImageButton", ScreenGui)
     ToggleOpenButton.Size = toggleSize
     ToggleOpenButton.Position = UDim2.new(0, 10, 0, 10)
@@ -78,9 +78,6 @@ function Library:Create(config)
     
     local ToggleOpenCorner = Instance.new("UICorner", ToggleOpenButton)
     ToggleOpenCorner.CornerRadius = UDim.new(1, 0)
-    
-    -- Toggle butonunu sürüklenebilir yap
-    MakeDraggable(ToggleOpenButton)
     
     -- Ana Frame (Arka Plan) - Ekranın tam ortasında
     local MainFrame = Instance.new("Frame", ScreenGui)
