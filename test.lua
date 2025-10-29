@@ -28,9 +28,10 @@ function Library:Create(config)
     -- Ana ScreenGui oluştur
     local ScreenGui = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.ResetOnSpawn = false
     CollectionService:AddTag(ScreenGui, "main")
     
-    -- Toggle Butonu (Açma/Kapama)
+    -- Toggle Butonu (Açma/Kapama) - Sadece bu sürüklenebilir
     local ToggleOpenButton = Instance.new("ImageButton", ScreenGui)
     ToggleOpenButton.Size = toggleSize
     ToggleOpenButton.Position = togglePosition
@@ -38,15 +39,21 @@ function Library:Create(config)
     ToggleOpenButton.BorderSizePixel = 0
     ToggleOpenButton.Image = toggleImageId
     ToggleOpenButton.ZIndex = 10
+    ToggleOpenButton.Active = true
     
     local ToggleOpenCorner = Instance.new("UICorner", ToggleOpenButton)
     ToggleOpenCorner.CornerRadius = UDim.new(1, 0)
     
-    -- Toggle Butonu Draggable
+    -- Toggle Butonu Draggable (Sadece Toggle Butonu)
     local dragging = false
     local dragInput
     local dragStart
     local startPos
+    
+    local function updateToggleButton(input)
+        local delta = input.Position - dragStart
+        ToggleOpenButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
     
     ToggleOpenButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -70,60 +77,62 @@ function Library:Create(config)
     
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            ToggleOpenButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            updateToggleButton(input)
         end
     end)
     
-    -- Ana Frame (Arka Plan) - Ekranın ortasına sabitlendi
-    local MainFrame = Instance.new("Frame", ScreenGui)
+    -- Ana Container Frame (Tüm UI elementlerini içerir)
+    local MainContainer = Instance.new("Frame", ScreenGui)
+    MainContainer.BorderSizePixel = 0
+    MainContainer.BackgroundTransparency = 1
+    MainContainer.Size = UDim2.new(0, 250, 0, 284)
+    MainContainer.Position = UDim2.new(0.5, -125, 0.5, -142)
+    MainContainer.Visible = true
+    MainContainer.Active = false
+    
+    -- Ana Frame (Arka Plan)
+    local MainFrame = Instance.new("Frame", MainContainer)
     MainFrame.BorderSizePixel = 0
     MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    MainFrame.Size = UDim2.new(0, 250, 0, 284)
-    MainFrame.Position = UDim2.new(0.5, -125, 0.5, -142)
+    MainFrame.Size = UDim2.new(1, 0, 1, 0)
+    MainFrame.Position = UDim2.new(0, 0, 0, 0)
     MainFrame.BackgroundTransparency = 0.3
-    MainFrame.Visible = true
-    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     
     local MainCorner = Instance.new("UICorner", MainFrame)
     
     -- Üst Beyaz Frame
-    local TopFrame = Instance.new("Frame", ScreenGui)
+    local TopFrame = Instance.new("Frame", MainContainer)
     TopFrame.BorderSizePixel = 0
     TopFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TopFrame.Size = UDim2.new(0, 250, 0, 36)
-    TopFrame.Position = UDim2.new(0.5, -125, 0.5, -142)
+    TopFrame.Size = UDim2.new(1, 0, 0, 36)
+    TopFrame.Position = UDim2.new(0, 0, 0, 0)
     TopFrame.BackgroundTransparency = 0.1
-    TopFrame.Visible = true
-    TopFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    TopFrame.Active = true
+    TopFrame.ZIndex = 2
     
     local TopCorner = Instance.new("UICorner", TopFrame)
     
     -- Başlık
-    local Title = Instance.new("TextButton", ScreenGui)
+    local Title = Instance.new("TextLabel", MainContainer)
     Title.BorderSizePixel = 0
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.TextSize = 15
     Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Title.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    Title.ZIndex = 2
-    Title.BackgroundTransparency = 100
+    Title.ZIndex = 3
+    Title.BackgroundTransparency = 1
     Title.Size = UDim2.new(0, 230, 0, 32)
     Title.Text = "📂 Crusty HUB V1"
-    Title.Position = UDim2.new(0.5, -115, 0.5, -136)
-    Title.AutoButtonColor = false
-    Title.Visible = true
-    Title.AnchorPoint = Vector2.new(0.5, 0.5)
+    Title.Position = UDim2.new(0, 10, 0, 2)
+    Title.TextColor3 = Color3.fromRGB(0, 0, 0)
     
     -- Tab Butonları Container
-    local TabContainer = Instance.new("Frame", ScreenGui)
+    local TabContainer = Instance.new("Frame", MainContainer)
     TabContainer.BorderSizePixel = 0
     TabContainer.BackgroundTransparency = 1
     TabContainer.Size = UDim2.new(0, 232, 0, 26)
-    TabContainer.Position = UDim2.new(0.5, -116, 0.5, -100)
-    TabContainer.ZIndex = 2
-    TabContainer.Visible = true
-    TabContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+    TabContainer.Position = UDim2.new(0, 8, 0, 42)
+    TabContainer.ZIndex = 3
     
     -- Tab Butonları
     local StealingTab = Instance.new("TextButton", TabContainer)
@@ -134,6 +143,7 @@ function Library:Create(config)
     StealingTab.Size = UDim2.new(0, 74, 0, 26)
     StealingTab.Text = "⚡ Stealing"
     StealingTab.Position = UDim2.new(0, 0, 0, 0)
+    StealingTab.ZIndex = 4
     local StealingCorner = Instance.new("UICorner", StealingTab)
     
     local VisualTab = Instance.new("TextButton", TabContainer)
@@ -144,6 +154,7 @@ function Library:Create(config)
     VisualTab.Size = UDim2.new(0, 76, 0, 26)
     VisualTab.Text = "👁️ Visual"
     VisualTab.Position = UDim2.new(0, 80, 0, 0)
+    VisualTab.ZIndex = 4
     local VisualCorner = Instance.new("UICorner", VisualTab)
     
     local PlayerTab = Instance.new("TextButton", TabContainer)
@@ -154,85 +165,40 @@ function Library:Create(config)
     PlayerTab.Size = UDim2.new(0, 74, 0, 26)
     PlayerTab.Text = "👥 Player"
     PlayerTab.Position = UDim2.new(0, 162, 0, 0)
+    PlayerTab.ZIndex = 4
     local PlayerCorner = Instance.new("UICorner", PlayerTab)
     
     -- İçerik Frameleri
     local ContentFrames = {}
-    ContentFrames["Stealing"] = Instance.new("Frame", ScreenGui)
-    ContentFrames["Visual"] = Instance.new("Frame", ScreenGui)
-    ContentFrames["Player"] = Instance.new("Frame", ScreenGui)
+    ContentFrames["Stealing"] = Instance.new("ScrollingFrame", MainContainer)
+    ContentFrames["Visual"] = Instance.new("ScrollingFrame", MainContainer)
+    ContentFrames["Player"] = Instance.new("ScrollingFrame", MainContainer)
     
     for _, frame in pairs(ContentFrames) do
         frame.BorderSizePixel = 0
         frame.BackgroundTransparency = 1
         frame.Size = UDim2.new(0, 238, 0, 200)
-        frame.Position = UDim2.new(0.5, -119, 0.5, -68)
+        frame.Position = UDim2.new(0, 6, 0, 74)
         frame.Visible = false
-        frame.AnchorPoint = Vector2.new(0.5, 0.5)
+        frame.ZIndex = 3
+        frame.ScrollBarThickness = 4
+        frame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        frame.AutomaticCanvasSize = Enum.AutomaticSize.Y
     end
     ContentFrames["Stealing"].Visible = true
     
-    -- GUI Draggable Sistemi
+    -- GUI Draggable Sistemi (Sadece UIDraggable true ise)
     if UIDraggable then
         local guiDragging = false
         local guiDragInput
         local guiDragStart
         local guiStartPos
         
-        local function updatePositions(delta)
-            -- MainFrame
-            MainFrame.Position = UDim2.new(
-                guiStartPos.MainFrame.X.Scale,
-                guiStartPos.MainFrame.X.Offset + delta.X,
-                guiStartPos.MainFrame.Y.Scale,
-                guiStartPos.MainFrame.Y.Offset + delta.Y
-            )
-            -- TopFrame
-            TopFrame.Position = UDim2.new(
-                guiStartPos.TopFrame.X.Scale,
-                guiStartPos.TopFrame.X.Offset + delta.X,
-                guiStartPos.TopFrame.Y.Scale,
-                guiStartPos.TopFrame.Y.Offset + delta.Y
-            )
-            -- Title
-            Title.Position = UDim2.new(
-                guiStartPos.Title.X.Scale,
-                guiStartPos.Title.X.Offset + delta.X,
-                guiStartPos.Title.Y.Scale,
-                guiStartPos.Title.Y.Offset + delta.Y
-            )
-            -- TabContainer
-            TabContainer.Position = UDim2.new(
-                guiStartPos.TabContainer.X.Scale,
-                guiStartPos.TabContainer.X.Offset + delta.X,
-                guiStartPos.TabContainer.Y.Scale,
-                guiStartPos.TabContainer.Y.Offset + delta.Y
-            )
-            -- ContentFrames
-            for name, frame in pairs(ContentFrames) do
-                frame.Position = UDim2.new(
-                    guiStartPos.ContentFrames[name].X.Scale,
-                    guiStartPos.ContentFrames[name].X.Offset + delta.X,
-                    guiStartPos.ContentFrames[name].Y.Scale,
-                    guiStartPos.ContentFrames[name].Y.Offset + delta.Y
-                )
-            end
-        end
-        
         TopFrame.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 guiDragging = true
                 guiDragStart = input.Position
-                guiStartPos = {
-                    MainFrame = MainFrame.Position,
-                    TopFrame = TopFrame.Position,
-                    Title = Title.Position,
-                    TabContainer = TabContainer.Position,
-                    ContentFrames = {}
-                }
-                for name, frame in pairs(ContentFrames) do
-                    guiStartPos.ContentFrames[name] = frame.Position
-                end
+                guiStartPos = MainContainer.Position
                 
                 input.Changed:Connect(function()
                     if input.UserInputState == Enum.UserInputState.End then
@@ -251,29 +217,37 @@ function Library:Create(config)
         UserInputService.InputChanged:Connect(function(input)
             if input == guiDragInput and guiDragging then
                 local delta = input.Position - guiDragStart
-                updatePositions(delta)
+                MainContainer.Position = UDim2.new(
+                    guiStartPos.X.Scale,
+                    guiStartPos.X.Offset + delta.X,
+                    guiStartPos.Y.Scale,
+                    guiStartPos.Y.Offset + delta.Y
+                )
             end
         end)
     end
     
     -- Toggle Açma/Kapama Fonksiyonu
     local UIOpen = true
-    ToggleOpenButton.MouseButton1Click:Connect(function()
-        UIOpen = not UIOpen
-        MainFrame.Visible = UIOpen
-        TopFrame.Visible = UIOpen
-        Title.Visible = UIOpen
-        TabContainer.Visible = UIOpen
-        for _, frame in pairs(ContentFrames) do
-            frame.Visible = UIOpen and (frame == ContentFrames[CurrentTab])
+    local clicking = false
+    
+    ToggleOpenButton.MouseButton1Down:Connect(function()
+        clicking = true
+    end)
+    
+    ToggleOpenButton.MouseButton1Up:Connect(function()
+        if clicking and not dragging then
+            UIOpen = not UIOpen
+            MainContainer.Visible = UIOpen
         end
+        clicking = false
     end)
     
     -- Tab Değiştirme Fonksiyonu
     local function SwitchTab(tabName)
         CurrentTab = tabName
         for name, frame in pairs(ContentFrames) do
-            frame.Visible = UIOpen and (name == tabName)
+            frame.Visible = (name == tabName)
         end
     end
     
@@ -294,32 +268,33 @@ function Library:Create(config)
         local Container = Instance.new("Frame", ContentFrames[tab])
         Container.BorderSizePixel = 0
         Container.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Container.Size = UDim2.new(0, 238, 0, 36)
+        Container.Size = UDim2.new(1, -10, 0, 36)
         Container.BackgroundTransparency = 0.1
+        Container.ZIndex = 4
         local ContainerCorner = Instance.new("UICorner", Container)
         
-        -- Toggle Butonu (Text Kısmı)
-        local ToggleButton = Instance.new("TextButton", Container)
-        ToggleButton.BorderSizePixel = 0
-        ToggleButton.TextXAlignment = Enum.TextXAlignment.Left
-        ToggleButton.TextSize = 15
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        ToggleButton.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-        ToggleButton.BackgroundTransparency = 1
-        ToggleButton.Size = UDim2.new(1, 0, 1, 0)
-        ToggleButton.Text = "  " .. text
-        ToggleButton.Position = UDim2.new(0, 0, 0, 0)
-        ToggleButton.AutoButtonColor = false
-        ToggleButton.ZIndex = 4
+        -- Toggle Text Label
+        local ToggleLabel = Instance.new("TextLabel", Container)
+        ToggleLabel.BorderSizePixel = 0
+        ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        ToggleLabel.TextSize = 15
+        ToggleLabel.BackgroundTransparency = 1
+        ToggleLabel.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        ToggleLabel.Size = UDim2.new(1, -60, 1, 0)
+        ToggleLabel.Text = text
+        ToggleLabel.Position = UDim2.new(0, 10, 0, 0)
+        ToggleLabel.ZIndex = 5
+        ToggleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
         
         -- Toggle Switch (Dış Frame)
-        local ToggleSwitch = Instance.new("Frame", Container)
-        ToggleSwitch.Active = true
-        ToggleSwitch.ZIndex = 3
+        local ToggleSwitch = Instance.new("TextButton", Container)
         ToggleSwitch.BorderSizePixel = 0
         ToggleSwitch.BackgroundColor3 = default and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(200, 200, 200)
         ToggleSwitch.Size = UDim2.new(0, 44, 0, 20)
         ToggleSwitch.Position = UDim2.new(1, -48, 0.5, -10)
+        ToggleSwitch.Text = ""
+        ToggleSwitch.AutoButtonColor = false
+        ToggleSwitch.ZIndex = 5
         local SwitchCorner = Instance.new("UICorner", ToggleSwitch)
         SwitchCorner.CornerRadius = UDim.new(0, 30)
         
@@ -329,15 +304,9 @@ function Library:Create(config)
         ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         ToggleCircle.Size = UDim2.new(0, 18, 0, 16)
         ToggleCircle.Position = default and UDim2.new(0, 24, 0, 2) or UDim2.new(0, 2, 0, 2)
+        ToggleCircle.ZIndex = 6
         local CircleCorner = Instance.new("UICorner", ToggleCircle)
         CircleCorner.CornerRadius = UDim.new(0, 50)
-        
-        -- Toggle Switch için tıklanabilir buton (görünmez)
-        local ToggleSwitchButton = Instance.new("TextButton", ToggleSwitch)
-        ToggleSwitchButton.Size = UDim2.new(1, 0, 1, 0)
-        ToggleSwitchButton.BackgroundTransparency = 1
-        ToggleSwitchButton.Text = ""
-        ToggleSwitchButton.ZIndex = 5
         
         -- Toggle Animasyonu
         local function Toggle()
@@ -363,8 +332,7 @@ function Library:Create(config)
             end)
         end
         
-        ToggleButton.MouseButton1Click:Connect(Toggle)
-        ToggleSwitchButton.MouseButton1Click:Connect(Toggle)
+        ToggleSwitch.MouseButton1Click:Connect(Toggle)
         
         function toggleData:SetValue(value)
             if self.Value ~= value then
@@ -380,6 +348,7 @@ function Library:Create(config)
         local layout = Instance.new("UIListLayout", frame)
         layout.SortOrder = Enum.SortOrder.LayoutOrder
         layout.Padding = UDim.new(0, 6)
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     end
     
     return GUI
