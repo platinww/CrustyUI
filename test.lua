@@ -1,641 +1,324 @@
--- Crusty Library V2 - Modern UI (Crusty HUB V1 Stili)
+-- Crusty HUB Library V1
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
-local SoundService = game:GetService("SoundService")
 
 local Library = {}
-Library.__index = Library
 
--- Tween ayarları
-local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local fastTween = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local notifyTween = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-
--- Ses çalma fonksiyonu
-local function PlaySound(soundId, volume)
-    if not soundId then return end
-    local sound = Instance.new("Sound")
-    sound.SoundId = soundId
-    sound.Volume = volume or 0.5
-    sound.Parent = SoundService
-    sound:Play()
-    sound.Ended:Connect(function()
-        sound:Destroy()
-    end)
-end
-
-function Library:CreateWindow(config)
-    config = config or {}
-    local windowTitle = config.Title or "Crusty HUB V1"
-    local iconId = config.Icon or "rbxassetid://7734053495"
-    local draggable = config.Draggable ~= false
-    local effectSounds = config.EffectSounds == true
-    local loadSound = "rbxassetid://137759965542959"
-    local notifySound = "rbxassetid://137759965542959"
-
-    local window = {}
-    window.CurrentTab = nil
-    window.Tabs = {}
-    window.ToggleButton = nil
-    window.MainFrame = nil
-    window.EffectSounds = effectSounds
-
-    -- ScreenGui oluştur
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrustyLibrary"
+function Library:CreateWindow(title)
+    local ScreenGui = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
-    ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-
-    -- Yükleme sesi çal
-    if effectSounds then
-        PlaySound(loadSound, 0.5)
-    end
-
-    -- Notification Container
-    local NotificationContainer = Instance.new("Frame")
-    NotificationContainer.Name = "NotificationContainer"
-    NotificationContainer.BackgroundTransparency = 1
-    NotificationContainer.Size = UDim2.new(0, 300, 1, 0)
-    NotificationContainer.Position = UDim2.new(1, -320, 0, 20)
-    NotificationContainer.Parent = ScreenGui
-
-    local NotifyLayout = Instance.new("UIListLayout")
-    NotifyLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    NotifyLayout.Padding = UDim.new(0, 10)
-    NotifyLayout.Parent = NotificationContainer
-
-    -- Notification fonksiyonu
-    function window:Notify(notifConfig)
-        notifConfig = notifConfig or {}
-        local title = notifConfig.Title or "Notification"
-        local message = notifConfig.Message or "No message provided"
-        local duration = notifConfig.Duration or 3
-        local notifType = notifConfig.Type or "Info"
-
-        if window.EffectSounds then
-            PlaySound(notifySound, 0.4)
-        end
-
-        local notifColor = Color3.fromRGB(0, 139, 255)
-        local notifIcon = "ℹ️"
-
-        if notifType == "Success" then
-            notifColor = Color3.fromRGB(67, 181, 129)
-            notifIcon = "✅"
-        elseif notifType == "Warning" then
-            notifColor = Color3.fromRGB(250, 166, 26)
-            notifIcon = "⚠️"
-        elseif notifType == "Error" then
-            notifColor = Color3.fromRGB(237, 66, 69)
-            notifIcon = "❌"
-        end
-
-        local NotifFrame = Instance.new("Frame")
-        NotifFrame.Name = "Notification"
-        NotifFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        NotifFrame.BorderSizePixel = 0
-        NotifFrame.Size = UDim2.new(1, 0, 0, 0)
-        NotifFrame.BackgroundTransparency = 0.1
-        NotifFrame.ClipsDescendants = false
-        NotifFrame.Position = UDim2.new(1, 20, 0, 0)
-        NotifFrame.Parent = NotificationContainer
-
-        local NotifCorner = Instance.new("UICorner")
-        NotifCorner.CornerRadius = UDim.new(0, 10)
-        NotifCorner.Parent = NotifFrame
-
-        local NotifStroke = Instance.new("UIStroke")
-        NotifStroke.Color = Color3.fromRGB(200, 200, 200)
-        NotifStroke.Thickness = 1
-        NotifStroke.Parent = NotifFrame
-
-        local NotifBorder = Instance.new("Frame")
-        NotifBorder.Name = "Border"
-        NotifBorder.BackgroundColor3 = notifColor
-        NotifBorder.BorderSizePixel = 0
-        NotifBorder.Size = UDim2.new(0, 4, 1, 0)
-        NotifBorder.Parent = NotifFrame
-
-        local BorderCorner = Instance.new("UICorner")
-        BorderCorner.CornerRadius = UDim.new(0, 10)
-        BorderCorner.Parent = NotifBorder
-
-        local NotifIcon = Instance.new("TextLabel")
-        NotifIcon.Name = "Icon"
-        NotifIcon.BackgroundTransparency = 1
-        NotifIcon.Size = UDim2.new(0, 30, 0, 30)
-        NotifIcon.Position = UDim2.new(0, 8, 0, 8)
-        NotifIcon.Font = Enum.Font.GothamBold
-        NotifIcon.Text = notifIcon
-        NotifIcon.TextColor3 = notifColor
-        NotifIcon.TextSize = 18
-        NotifIcon.Parent = NotifFrame
-
-        local NotifTitle = Instance.new("TextLabel")
-        NotifTitle.Name = "Title"
-        NotifTitle.BackgroundTransparency = 1
-        NotifTitle.Size = UDim2.new(1, -45, 0, 18)
-        NotifTitle.Position = UDim2.new(0, 42, 0, 8)
-        NotifTitle.Font = Enum.Font.GothamBold
-        NotifTitle.Text = title
-        NotifTitle.TextColor3 = Color3.fromRGB(0, 0, 0)
-        NotifTitle.TextSize = 13
-        NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
-        NotifTitle.Parent = NotifFrame
-
-        local NotifMessage = Instance.new("TextLabel")
-        NotifMessage.Name = "Message"
-        NotifMessage.BackgroundTransparency = 1
-        NotifMessage.Size = UDim2.new(1, -45, 0, 32)
-        NotifMessage.Position = UDim2.new(0, 42, 0, 26)
-        NotifMessage.Font = Enum.Font.Gotham
-        NotifMessage.Text = message
-        NotifMessage.TextColor3 = Color3.fromRGB(100, 100, 100)
-        NotifMessage.TextSize = 11
-        NotifMessage.TextXAlignment = Enum.TextXAlignment.Left
-        NotifMessage.TextYAlignment = Enum.TextYAlignment.Top
-        NotifMessage.TextWrapped = true
-        NotifMessage.Parent = NotifFrame
-
-        TweenService:Create(NotifFrame, notifyTween, {
-            Size = UDim2.new(1, 0, 0, 65),
-            Position = UDim2.new(0, 0, 0, 0)
-        }):Play()
-
-        task.delay(duration, function()
-            local exitTween = TweenService:Create(NotifFrame, tweenInfo, {
-                Position = UDim2.new(1, 20, 0, 0),
-                BackgroundTransparency = 1
-            })
-
-            TweenService:Create(NotifTitle, tweenInfo, {TextTransparency = 1}):Play()
-            TweenService:Create(NotifMessage, tweenInfo, {TextTransparency = 1}):Play()
-            TweenService:Create(NotifBorder, tweenInfo, {BackgroundTransparency = 1}):Play()
-            TweenService:Create(NotifIcon, tweenInfo, {TextTransparency = 1}):Play()
-            TweenService:Create(NotifStroke, tweenInfo, {Transparency = 1}):Play()
-
-            exitTween:Play()
-            task.wait(0.3)
-            NotifFrame:Destroy()
-        end)
-    end
-
-    -- Toggle Button (Daire - Sürüklenebilir)
-    local ToggleButton = Instance.new("ImageButton")
-    ToggleButton.Name = "ToggleButton"
-    ToggleButton.Image = iconId
-    ToggleButton.Size = UDim2.new(0, 60, 0, 60)
-    ToggleButton.Position = UDim2.new(0, 20, 0.5, -30)
-    ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 139, 255)
-    ToggleButton.BorderSizePixel = 0
-    ToggleButton.ScaleType = Enum.ScaleType.Fit
-    ToggleButton.ImageTransparency = 0.2
-    ToggleButton.Parent = ScreenGui
-
-    local ToggleCorner = Instance.new("UICorner")
-    ToggleCorner.CornerRadius = UDim.new(1, 0)
-    ToggleCorner.Parent = ToggleButton
-
-    local ToggleStroke = Instance.new("UIStroke")
-    ToggleStroke.Color = Color3.fromRGB(200, 200, 200)
-    ToggleStroke.Thickness = 3
-    ToggleStroke.Parent = ToggleButton
-
-    window.ToggleButton = ToggleButton
-
-    -- Toggle Button sürükleme
-    local toggleDragging = false
-    local toggleDragStart = nil
-    local toggleStartPos = nil
-
-    ToggleButton.InputBegan:Connect(function(input)
+    
+    -- Ana Frame (Arka Plan)
+    local MainFrame = Instance.new("Frame", ScreenGui)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    MainFrame.Size = UDim2.new(0, 250, 0, 284)
+    MainFrame.Position = UDim2.new(0, 274, 0, -30)
+    MainFrame.BackgroundTransparency = 0.5
+    
+    local MainCorner = Instance.new("UICorner", MainFrame)
+    
+    -- Üst Frame (Header)
+    local HeaderFrame = Instance.new("Frame", ScreenGui)
+    HeaderFrame.BorderSizePixel = 0
+    HeaderFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    HeaderFrame.Size = UDim2.new(0, 250, 0, 36)
+    HeaderFrame.Position = UDim2.new(0, 274, 0, -30)
+    HeaderFrame.BackgroundTransparency = 0.1
+    
+    local HeaderCorner = Instance.new("UICorner", HeaderFrame)
+    
+    -- Title Button
+    local TitleButton = Instance.new("TextButton", ScreenGui)
+    TitleButton.BorderSizePixel = 0
+    TitleButton.TextXAlignment = Enum.TextXAlignment.Left
+    TitleButton.TextSize = 15
+    TitleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    TitleButton.FontFace = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    TitleButton.ZIndex = 2
+    TitleButton.BackgroundTransparency = 100
+    TitleButton.Size = UDim2.new(0, 230, 0, 32)
+    TitleButton.Text = title or "📂 Crusty HUB V1"
+    TitleButton.Position = UDim2.new(0, 284, 0, -28)
+    
+    -- Sürükleme Sistemi
+    local dragging = false
+    local dragInput, mousePos, framePos
+    
+    TitleButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            toggleDragging = true
-            toggleDragStart = input.Position
-            toggleStartPos = ToggleButton.Position
-
+            dragging = true
+            mousePos = input.Position
+            framePos = MainFrame.Position
+            
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
-                    toggleDragging = false
+                    dragging = false
                 end
             end)
         end
     end)
-
+    
     UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and toggleDragging then
-            local delta = input.Position - toggleDragStart
-            ToggleButton.Position = UDim2.new(
-                toggleStartPos.X.Scale, toggleStartPos.X.Offset + delta.X,
-                toggleStartPos.Y.Scale, toggleStartPos.Y.Offset + delta.Y
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if dragging and dragInput then
+            local delta = dragInput.Position - mousePos
+            local targetPos = UDim2.new(
+                framePos.X.Scale,
+                framePos.X.Offset + delta.X,
+                framePos.Y.Scale,
+                framePos.Y.Offset + delta.Y
             )
-        end
-    end)
-
-    -- Hover efekti
-    ToggleButton.MouseEnter:Connect(function()
-        TweenService:Create(ToggleButton, fastTween, {
-            Size = UDim2.new(0, 67, 0, 67),
-            ImageTransparency = 0
-        }):Play()
-        TweenService:Create(ToggleStroke, fastTween, {Thickness = 4}):Play()
-    end)
-
-    ToggleButton.MouseLeave:Connect(function()
-        TweenService:Create(ToggleButton, fastTween, {
-            Size = UDim2.new(0, 60, 0, 60),
-            ImageTransparency = 0.2
-        }):Play()
-        TweenService:Create(ToggleStroke, fastTween, {Thickness = 3}):Play()
-    end)
-
-    -- Ana Frame (Arka plan)
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.BorderSizePixel = 0
-    MainFrame.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
-    MainFrame.Size = UDim2.new(0, 300, 0, 350)
-    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
-    MainFrame.BackgroundTransparency = 0.1
-    MainFrame.ClipsDescendants = true
-    MainFrame.Visible = false
-    MainFrame.Parent = ScreenGui
-
-    window.MainFrame = MainFrame
-
-    local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 12)
-    MainCorner.Parent = MainFrame
-
-    -- Toggle Button tıklama
-    ToggleButton.MouseButton1Click:Connect(function()
-        if MainFrame.Visible then
-            TweenService:Create(MainFrame, tweenInfo, {
-                Size = UDim2.new(0, 0, 0, 0),
-                Position = UDim2.new(0.5, 0, 0.5, 0)
-            }):Play()
-
-            task.wait(0.3)
-            MainFrame.Visible = false
-            MainFrame.Size = UDim2.new(0, 300, 0, 350)
-            MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
-        else
-            MainFrame.Visible = true
-            MainFrame.Size = UDim2.new(0, 0, 0, 0)
-            MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-
-            TweenService:Create(MainFrame, tweenInfo, {
-                Size = UDim2.new(0, 300, 0, 350),
-                Position = UDim2.new(0.5, -150, 0.5, -175)
-            }):Play()
-        end
-    end)
-
-    -- Başlık Frame
-    local TitleFrame = Instance.new("Frame")
-    TitleFrame.Name = "TitleFrame"
-    TitleFrame.BorderSizePixel = 0
-    TitleFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TitleFrame.Size = UDim2.new(0, 284, 0, 40)
-    TitleFrame.Position = UDim2.new(0, 8, 0, 8)
-    TitleFrame.BackgroundTransparency = 0.1
-    TitleFrame.Parent = MainFrame
-
-    local TitleCorner = Instance.new("UICorner")
-    TitleCorner.CornerRadius = UDim.new(0, 10)
-    TitleCorner.Parent = TitleFrame
-
-    -- Başlık Text (Emoji olmadan)
-    local TitleText = Instance.new("TextLabel")
-    TitleText.Name = "TitleText"
-    TitleText.TextXAlignment = Enum.TextXAlignment.Left
-    TitleText.ZIndex = 2
-    TitleText.BorderSizePixel = 0
-    TitleText.TextSize = 17
-    TitleText.BackgroundTransparency = 1
-    TitleText.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    TitleText.Size = UDim2.new(1, -40, 1, 0)
-    TitleText.Position = UDim2.new(0, 8, 0, 0)
-    TitleText.Text = windowTitle
-    TitleText.TextColor3 = Color3.fromRGB(0, 0, 0)
-    TitleText.Parent = TitleFrame
-
-    -- Close Button (X)
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Name = "CloseButton"
-    CloseButton.ZIndex = 3
-    CloseButton.BorderSizePixel = 0
-    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
-    CloseButton.Size = UDim2.new(0, 28, 0, 28)
-    CloseButton.Position = UDim2.new(1, -32, 0, 6)
-    CloseButton.Text = "✕"
-    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CloseButton.TextSize = 16
-    CloseButton.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    CloseButton.AutoButtonColor = false
-    CloseButton.Parent = TitleFrame
-
-    local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 6)
-    CloseCorner.Parent = CloseButton
-
-    CloseButton.MouseButton1Click:Connect(function()
-        TweenService:Create(MainFrame, tweenInfo, {
-            Size = UDim2.new(0, 0, 0, 0),
-            Position = UDim2.new(0.5, 0, 0.5, 0)
-        }):Play()
-
-        task.wait(0.3)
-        MainFrame.Visible = false
-        MainFrame.Size = UDim2.new(0, 300, 0, 350)
-        MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
-    end)
-
-    CloseButton.MouseEnter:Connect(function()
-        TweenService:Create(CloseButton, fastTween, {BackgroundColor3 = Color3.fromRGB(255, 50, 50)}):Play()
-    end)
-
-    CloseButton.MouseLeave:Connect(function()
-        TweenService:Create(CloseButton, fastTween, {BackgroundColor3 = Color3.fromRGB(255, 75, 75)}):Play()
-    end)
-
-    -- Tab Container (Scrolling)
-    local TabContainer = Instance.new("ScrollingFrame")
-    TabContainer.Name = "TabContainer"
-    TabContainer.BorderSizePixel = 0
-    TabContainer.BackgroundTransparency = 1
-    TabContainer.Size = UDim2.new(1, -16, 0, 30)
-    TabContainer.Position = UDim2.new(0, 8, 0, 54)
-    TabContainer.ScrollBarThickness = 0
-    TabContainer.CanvasSize = UDim2.new(0, 0, 0, 30)
-    TabContainer.ScrollingDirection = Enum.ScrollingDirection.X
-    TabContainer.Parent = MainFrame
-
-    local TabLayout = Instance.new("UIListLayout")
-    TabLayout.FillDirection = Enum.FillDirection.Horizontal
-    TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    TabLayout.Padding = UDim.new(0, 8)
-    TabLayout.Parent = TabContainer
-
-    TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        TabContainer.CanvasSize = UDim2.new(0, TabLayout.AbsoluteContentSize.X, 0, 30)
-    end)
-
-    -- Content Container
-    local ContentContainer = Instance.new("Frame")
-    ContentContainer.Name = "ContentContainer"
-    ContentContainer.BorderSizePixel = 0
-    ContentContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    ContentContainer.Size = UDim2.new(0, 284, 0, 260)
-    ContentContainer.Position = UDim2.new(0, 8, 0, 90)
-    ContentContainer.BackgroundTransparency = 0.1
-    ContentContainer.Parent = MainFrame
-
-    local ContentCorner = Instance.new("UICorner")
-    ContentCorner.CornerRadius = UDim.new(0, 8)
-    ContentCorner.Parent = ContentContainer
-
-    -- Dragging System (Sadece Draggable true ise)
-    if draggable then
-        local dragging, dragInput, dragStart, startPos
-
-        TitleFrame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-                dragStart = input.Position
-                startPos = MainFrame.Position
-
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
+            
+            MainFrame.Position = targetPos
+            HeaderFrame.Position = targetPos
+            TitleButton.Position = UDim2.new(targetPos.X.Scale, targetPos.X.Offset + 10, targetPos.Y.Scale, targetPos.Y.Offset + 2)
+            
+            -- Tab butonlarını da taşı
+            for _, child in pairs(ScreenGui:GetChildren()) do
+                if child.Name == "TabButton" then
+                    local offset = child:GetAttribute("OffsetFromMain")
+                    if offset then
+                        child.Position = UDim2.new(targetPos.X.Scale, targetPos.X.Offset + offset.X, targetPos.Y.Scale, targetPos.Y.Offset + offset.Y)
                     end
-                end)
-            end
-        end)
-
-        TitleFrame.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement then
-                dragInput = input
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(input)
-            if input == dragInput and dragging then
-                local delta = input.Position - dragStart
-                MainFrame.Position = UDim2.new(
-                    startPos.X.Scale, startPos.X.Offset + delta.X,
-                    startPos.Y.Scale, startPos.Y.Offset + delta.Y
-                )
-            end
-        end)
-    end
-
-    -- Tab oluşturma fonksiyonu
-    function window:CreateTab(tabName, tabIcon)
-        local tab = {}
-        tab.Elements = {}
-        tab.Container = nil
-        tab.Button = nil
-
-        -- Tab Button (İkonlu)
-        local TabButton = Instance.new("TextButton")
-        TabButton.Name = tabName
-        TabButton.ZIndex = 2
-        TabButton.BorderSizePixel = 0
-        TabButton.TextSize = 14
-        TabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        TabButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-        TabButton.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-        TabButton.Size = UDim2.new(0, 90, 0, 26)
-        TabButton.Text = "   " .. tabName
-        TabButton.BackgroundTransparency = 0.1
-        TabButton.AutoButtonColor = false
-        TabButton.Parent = TabContainer
-
-        local TabCorner = Instance.new("UICorner")
-        TabCorner.CornerRadius = UDim.new(0, 6)
-        TabCorner.Parent = TabButton
-
-        -- İkon ekleme
-        local TabIcon = Instance.new("ImageLabel")
-        TabIcon.Name = "Icon"
-        TabIcon.BackgroundTransparency = 1
-        TabIcon.Size = UDim2.new(0, 16, 0, 16)
-        TabIcon.Position = UDim2.new(0, 8, 0.5, -8)
-        TabIcon.Image = tabIcon or "rbxassetid://7734053495"
-        TabIcon.Parent = TabButton
-
-        tab.Button = TabButton
-
-        -- Tab Content Frame
-        local TabContent = Instance.new("ScrollingFrame")
-        TabContent.Name = tabName .. "Content"
-        TabContent.BorderSizePixel = 0
-        TabContent.BackgroundTransparency = 1
-        TabContent.Size = UDim2.new(1, -8, 1, -8)
-        TabContent.Position = UDim2.new(0, 4, 0, 4)
-        TabContent.ScrollBarThickness = 4
-        TabContent.Visible = false
-        TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-        TabContent.Parent = ContentContainer
-
-        local ContentLayout = Instance.new("UIListLayout")
-        ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        ContentLayout.Padding = UDim.new(0, 6)
-        ContentLayout.Parent = TabContent
-
-        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
-        end)
-
-        tab.Container = TabContent
-
-        -- Tab değiştirme
-        TabButton.MouseButton1Click:Connect(function()
-            for _, otherTab in pairs(window.Tabs) do
-                if otherTab.Container then
-                    TweenService:Create(otherTab.Container, fastTween, {Size = UDim2.new(1, -8, 0, 0)}):Play()
-                    task.wait(0.15)
-                    otherTab.Container.Visible = false
-                    otherTab.Container.Size = UDim2.new(1, -8, 1, -8)
-                end
-                if otherTab.Button then
-                    TweenService:Create(otherTab.Button, fastTween, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                 end
             end
-
-            TabContent.Visible = true
-            TabContent.Size = UDim2.new(1, -8, 0, 0)
-            TweenService:Create(TabContent, fastTween, {Size = UDim2.new(1, -8, 1, -8)}):Play()
-            TweenService:Create(TabButton, fastTween, {BackgroundColor3 = Color3.fromRGB(220, 220, 220)}):Play()
-            window.CurrentTab = tab
-        end)
-
-        TabButton.MouseEnter:Connect(function()
-            if window.CurrentTab ~= tab then
-                TweenService:Create(TabButton, fastTween, {BackgroundTransparency = 0.05}):Play()
-            end
-        end)
-
-        TabButton.MouseLeave:Connect(function()
-            if window.CurrentTab ~= tab then
-                TweenService:Create(TabButton, fastTween, {BackgroundTransparency = 0.1}):Play()
-            end
-        end)
-
-        -- İlk tab'ı aktif et
-        if #window.Tabs == 0 then
-            TabContent.Visible = true
-            TabButton.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
-            window.CurrentTab = tab
         end
+    end)
+    
+    local Window = {
+        ScreenGui = ScreenGui,
+        MainFrame = MainFrame,
+        HeaderFrame = HeaderFrame,
+        CurrentTab = nil,
+        Tabs = {},
+        TabButtons = {},
+        TabYOffset = 12
+    }
+    
+    return Window
+end
 
-        table.insert(window.Tabs, tab)
-
-        -- Toggle oluşturma
-        function tab:CreateToggle(config)
-            config = config or {}
-            local toggleName = config.Name or "Toggle"
-            local toggleIcon = config.Icon or "rbxassetid://7734053495"
-            local defaultValue = config.Default or false
-            local callback = config.Callback or function() end
-
-            local toggleState = defaultValue
-
-            local ToggleFrame = Instance.new("Frame")
-            ToggleFrame.Name = "ToggleFrame"
-            ToggleFrame.BorderSizePixel = 0
-            ToggleFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            ToggleFrame.Size = UDim2.new(1, 0, 0, 36)
-            ToggleFrame.BackgroundTransparency = 0.1
-            ToggleFrame.Parent = TabContent
-
-            local ToggleCorner = Instance.new("UICorner")
-            ToggleCorner.CornerRadius = UDim.new(0, 8)
-            ToggleCorner.Parent = ToggleFrame
-
-            -- İkon ekleme
-            local ToggleIcon = Instance.new("ImageLabel")
-            ToggleIcon.Name = "Icon"
-            ToggleIcon.BackgroundTransparency = 1
-            ToggleIcon.Size = UDim2.new(0, 20, 0, 20)
-            ToggleIcon.Position = UDim2.new(0, 8, 0.5, -10)
-            ToggleIcon.Image = toggleIcon
-            ToggleIcon.Parent = ToggleFrame
-
-            local ToggleText = Instance.new("TextLabel")
-            ToggleText.Name = "ToggleText"
-            ToggleText.TextXAlignment = Enum.TextXAlignment.Left
-            ToggleText.ZIndex = 2
-            ToggleText.BorderSizePixel = 0
-            ToggleText.TextSize = 15
-            ToggleText.BackgroundTransparency = 1
-            ToggleText.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-            ToggleText.Size = UDim2.new(1, -70, 1, 0)
-            ToggleText.Position = UDim2.new(0, 34, 0, 0)
-            ToggleText.Text = toggleName
-            ToggleText.TextColor3 = Color3.fromRGB(0, 0, 0)
-            ToggleText.Parent = ToggleFrame
-
-            local ToggleSwitch = Instance.new("TextButton")
-            ToggleSwitch.Name = "ToggleSwitch"
-            ToggleSwitch.ZIndex = 3
-            ToggleSwitch.BorderSizePixel = 0
-            ToggleSwitch.BackgroundColor3 = toggleState and Color3.fromRGB(0, 120, 215) or Color3.fromRGB(200, 200, 200)
-            ToggleSwitch.Size = UDim2.new(0, 50, 0, 24)
-            ToggleSwitch.Position = UDim2.new(1, -56, 0.5, -12)
-            ToggleSwitch.Text = ""
-            ToggleSwitch.AutoButtonColor = false
-            ToggleSwitch.Parent = ToggleFrame
-
-            local SwitchCorner = Instance.new("UICorner")
-            SwitchCorner.CornerRadius = UDim.new(0, 30)
-            SwitchCorner.Parent = ToggleSwitch
-
-            local ToggleCircle = Instance.new("Frame")
-            ToggleCircle.Name = "ToggleCircle"
-            ToggleCircle.BorderSizePixel = 0
-            ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            ToggleCircle.Size = UDim2.new(0, 22, 0, 22)
-            ToggleCircle.Position = toggleState and UDim2.new(0, 26, 0, 1) or UDim2.new(0, 2, 0, 1)
-            ToggleCircle.Parent = ToggleSwitch
-
-            local CircleCorner = Instance.new("UICorner")
-            CircleCorner.CornerRadius = UDim.new(0, 50)
-            CircleCorner.Parent = ToggleCircle
-
-            local function toggle()
-                toggleState = not toggleState
-
-                TweenService:Create(ToggleSwitch, tweenInfo, {
-                    BackgroundColor3 = toggleState and Color3.fromRGB(0, 120, 215) or Color3.fromRGB(200, 200, 200)
-                }):Play()
-
-                TweenService:Create(ToggleCircle, tweenInfo, {
-                    Position = toggleState and UDim2.new(0, 26, 0, 1) or UDim2.new(0, 2, 0, 1)
-                }):Play()
-
-                callback(toggleState)
-            end
-
-            ToggleSwitch.MouseButton1Click:Connect(toggle)
-
-            local toggleObj = {}
-            function toggleObj:SetValue(value)
-                if toggleState ~= value then
-                    toggle()
-                end
-            end
-
-            return toggleObj
+function Library:AddTab(window, tabName, icon)
+    local tabIcon = icon or "📂"
+    local tabButton = Instance.new("TextButton", window.ScreenGui)
+    tabButton.Name = "TabButton"
+    tabButton.BorderSizePixel = 0
+    tabButton.TextSize = 14
+    tabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    tabButton.FontFace = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    tabButton.ZIndex = 2
+    tabButton.Size = UDim2.new(0, 74, 0, 26)
+    tabButton.Text = tabIcon .. " " .. tabName
+    tabButton.Position = UDim2.new(0, window.MainFrame.Position.X.Offset + 8, 0, window.TabYOffset)
+    
+    -- Pozisyon offset'ini kaydet
+    tabButton:SetAttribute("OffsetFromMain", {X = 8, Y = window.TabYOffset})
+    
+    local tabCorner = Instance.new("UICorner", tabButton)
+    
+    -- Tab için içerik frame'i
+    local contentFrame = Instance.new("Frame", window.ScreenGui)
+    contentFrame.BorderSizePixel = 0
+    contentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    contentFrame.Size = UDim2.new(0, 238, 0, 36)
+    contentFrame.Position = UDim2.new(0, window.MainFrame.Position.X.Offset + 6, 0, 44)
+    contentFrame.BackgroundTransparency = 0.1
+    contentFrame.Visible = false
+    
+    local contentCorner = Instance.new("UICorner", contentFrame)
+    
+    local Tab = {
+        Name = tabName,
+        Button = tabButton,
+        ContentFrame = contentFrame,
+        Elements = {},
+        ElementYOffset = 0
+    }
+    
+    table.insert(window.Tabs, Tab)
+    table.insert(window.TabButtons, tabButton)
+    
+    window.TabYOffset = window.TabYOffset + 80
+    
+    -- Tab değiştirme animasyonu
+    tabButton.MouseButton1Click:Connect(function()
+        -- Animasyon ile büyüt-küçült
+        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local shrink = TweenService:Create(tabButton, tweenInfo, {Size = UDim2.new(0, 70, 0, 24)})
+        local grow = TweenService:Create(tabButton, tweenInfo, {Size = UDim2.new(0, 74, 0, 26)})
+        
+        shrink:Play()
+        shrink.Completed:Wait()
+        grow:Play()
+        
+        -- Tüm tab'ları gizle
+        for _, tab in pairs(window.Tabs) do
+            tab.ContentFrame.Visible = false
+            tab.Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         end
-
-        return tab
+        
+        -- Seçili tab'ı göster
+        contentFrame.Visible = true
+        tabButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        window.CurrentTab = Tab
+    end)
+    
+    -- İlk tab'ı otomatik seç
+    if #window.Tabs == 1 then
+        tabButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        contentFrame.Visible = true
+        window.CurrentTab = Tab
     end
+    
+    return Tab
+end
 
-    return window
+function Library:AddToggle(tab, text, default, callback)
+    local isToggled = default or false
+    
+    -- Toggle Frame
+    local toggleFrame = Instance.new("Frame", tab.ContentFrame)
+    toggleFrame.Active = true
+    toggleFrame.ZIndex = 3
+    toggleFrame.BorderSizePixel = 0
+    toggleFrame.BackgroundColor3 = isToggled and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(100, 100, 100)
+    toggleFrame.Size = UDim2.new(0, 44, 0, 20)
+    toggleFrame.Position = UDim2.new(0, 190, 0, tab.ElementYOffset + 8)
+    
+    local toggleCorner = Instance.new("UICorner", toggleFrame)
+    toggleCorner.CornerRadius = UDim.new(0, 30)
+    
+    -- Toggle İç Frame (Kaydırıcı)
+    local toggleInner = Instance.new("Frame", toggleFrame)
+    toggleInner.BorderSizePixel = 0
+    toggleInner.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    toggleInner.Size = UDim2.new(0, 18, 0, 16)
+    toggleInner.Position = isToggled and UDim2.new(0, 24, 0, 2) or UDim2.new(0, 2, 0, 2)
+    
+    local innerCorner = Instance.new("UICorner", toggleInner)
+    innerCorner.CornerRadius = UDim.new(0, 50)
+    
+    -- Toggle Butonu
+    local toggleButton = Instance.new("TextButton", tab.ContentFrame)
+    toggleButton.BorderSizePixel = 0
+    toggleButton.TextXAlignment = Enum.TextXAlignment.Left
+    toggleButton.TextSize = 15
+    toggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    toggleButton.FontFace = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    toggleButton.ZIndex = 2
+    toggleButton.BackgroundTransparency = 100
+    toggleButton.Size = UDim2.new(0, 180, 0, 32)
+    toggleButton.Text = text
+    toggleButton.Position = UDim2.new(0, 10, 0, tab.ElementYOffset)
+    
+    -- Toggle İşlevi
+    local function toggle()
+        isToggled = not isToggled
+        
+        -- Animasyonlu geçiş
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        
+        local colorTween = TweenService:Create(toggleFrame, tweenInfo, {
+            BackgroundColor3 = isToggled and Color3.fromRGB(0, 139, 255) or Color3.fromRGB(100, 100, 100)
+        })
+        
+        local positionTween = TweenService:Create(toggleInner, tweenInfo, {
+            Position = isToggled and UDim2.new(0, 24, 0, 2) or UDim2.new(0, 2, 0, 2)
+        })
+        
+        colorTween:Play()
+        positionTween:Play()
+        
+        if callback then
+            callback(isToggled)
+        end
+    end
+    
+    toggleButton.MouseButton1Click:Connect(toggle)
+    toggleFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            toggle()
+        end
+    end)
+    
+    tab.ElementYOffset = tab.ElementYOffset + 42
+    
+    -- Eğer çok fazla element varsa yeni frame ekle
+    if tab.ElementYOffset > 150 then
+        local newFrame = Instance.new("Frame", tab.ContentFrame)
+        newFrame.BorderSizePixel = 0
+        newFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        newFrame.Size = UDim2.new(0, 238, 0, 36)
+        newFrame.Position = UDim2.new(0, 0, 0, 42)
+        newFrame.BackgroundTransparency = 0.1
+        
+        local newCorner = Instance.new("UICorner", newFrame)
+        
+        tab.ContentFrame = newFrame
+        tab.ElementYOffset = 0
+    end
+    
+    return {
+        Toggle = toggle,
+        SetState = function(state)
+            if state ~= isToggled then
+                toggle()
+            end
+        end
+    }
+end
+
+function Library:AddButton(tab, text, callback)
+    local button = Instance.new("TextButton", tab.ContentFrame)
+    button.BorderSizePixel = 0
+    button.TextXAlignment = Enum.TextXAlignment.Left
+    button.TextSize = 15
+    button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    button.FontFace = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    button.ZIndex = 2
+    button.BackgroundTransparency = 100
+    button.Size = UDim2.new(0, 230, 0, 32)
+    button.Text = text
+    button.Position = UDim2.new(0, 10, 0, tab.ElementYOffset)
+    
+    -- Hover efekti
+    button.MouseEnter:Connect(function()
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local tween = TweenService:Create(button, tweenInfo, {BackgroundTransparency = 0.9})
+        tween:Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local tween = TweenService:Create(button, tweenInfo, {BackgroundTransparency = 100})
+        tween:Play()
+    end)
+    
+    -- Tıklama animasyonu
+    button.MouseButton1Click:Connect(function()
+        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local shrink = TweenService:Create(button, tweenInfo, {Size = UDim2.new(0, 225, 0, 30)})
+        local grow = TweenService:Create(button, tweenInfo, {Size = UDim2.new(0, 230, 0, 32)})
+        
+        shrink:Play()
+        shrink.Completed:Wait()
+        grow:Play()
+        
+        if callback then
+            callback()
+        end
+    end)
+    
+    tab.ElementYOffset = tab.ElementYOffset + 42
+    
+    return button
 end
 
 return Library
