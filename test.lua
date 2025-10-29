@@ -13,14 +13,32 @@ local Library = {}
 local CollectionService = game:GetService("CollectionService")
 local TweenService = game:GetService("TweenService")
 
-function Library:Create()
+function Library:Create(config)
     local GUI = {}
     local CurrentTab = "Stealing"
+    
+    -- Konfigürasyon
+    local toggleButtonConfig = config or {}
+    local toggleImageId = toggleButtonConfig.ImageId or "rbxassetid://0"
+    local togglePosition = toggleButtonConfig.Position or UDim2.new(0, 10, 0.5, -25)
+    local toggleSize = toggleButtonConfig.Size or UDim2.new(0, 50, 0, 50)
     
     -- Ana ScreenGui oluştur
     local ScreenGui = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     CollectionService:AddTag(ScreenGui, "main")
+    
+    -- Toggle Butonu (Açma/Kapama)
+    local ToggleOpenButton = Instance.new("ImageButton", ScreenGui)
+    ToggleOpenButton.Size = toggleSize
+    ToggleOpenButton.Position = togglePosition
+    ToggleOpenButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleOpenButton.BorderSizePixel = 0
+    ToggleOpenButton.Image = toggleImageId
+    ToggleOpenButton.ZIndex = 10
+    
+    local ToggleOpenCorner = Instance.new("UICorner", ToggleOpenButton)
+    ToggleOpenCorner.CornerRadius = UDim.new(1, 0)
     
     -- Ana Frame (Arka Plan)
     local MainFrame = Instance.new("Frame", ScreenGui)
@@ -29,6 +47,7 @@ function Library:Create()
     MainFrame.Size = UDim2.new(0, 250, 0, 284)
     MainFrame.Position = UDim2.new(0, 274, 0, -30)
     MainFrame.BackgroundTransparency = 0.5
+    MainFrame.Visible = true
     
     local MainCorner = Instance.new("UICorner", MainFrame)
     
@@ -39,6 +58,7 @@ function Library:Create()
     TopFrame.Size = UDim2.new(0, 250, 0, 36)
     TopFrame.Position = UDim2.new(0, 274, 0, -30)
     TopFrame.BackgroundTransparency = 0.1
+    TopFrame.Visible = true
     
     local TopCorner = Instance.new("UICorner", TopFrame)
     
@@ -55,6 +75,7 @@ function Library:Create()
     Title.Text = "📂 Crusty HUB V1"
     Title.Position = UDim2.new(0, 284, 0, -28)
     Title.AutoButtonColor = false
+    Title.Visible = true
     
     -- Tab Butonları Container
     local TabContainer = Instance.new("Frame", ScreenGui)
@@ -63,6 +84,7 @@ function Library:Create()
     TabContainer.Size = UDim2.new(0, 232, 0, 26)
     TabContainer.Position = UDim2.new(0, 282, 0, 12)
     TabContainer.ZIndex = 2
+    TabContainer.Visible = true
     
     -- Tab Butonları
     local StealingTab = Instance.new("TextButton", TabContainer)
@@ -110,11 +132,24 @@ function Library:Create()
     end
     ContentFrames["Stealing"].Visible = true
     
+    -- Toggle Açma/Kapama Fonksiyonu
+    local UIOpen = true
+    ToggleOpenButton.MouseButton1Click:Connect(function()
+        UIOpen = not UIOpen
+        MainFrame.Visible = UIOpen
+        TopFrame.Visible = UIOpen
+        Title.Visible = UIOpen
+        TabContainer.Visible = UIOpen
+        for _, frame in pairs(ContentFrames) do
+            frame.Visible = UIOpen and (frame == ContentFrames[CurrentTab])
+        end
+    end)
+    
     -- Tab Değiştirme Fonksiyonu
     local function SwitchTab(tabName)
         CurrentTab = tabName
         for name, frame in pairs(ContentFrames) do
-            frame.Visible = (name == tabName)
+            frame.Visible = UIOpen and (name == tabName)
         end
     end
     
@@ -123,11 +158,11 @@ function Library:Create()
     PlayerTab.MouseButton1Click:Connect(function() SwitchTab("Player") end)
     
     -- Toggle Oluşturma Fonksiyonu
-    function GUI:CreateToggle(config)
-        local tab = config.Tab or "Stealing"
-        local text = config.Text or "Toggle"
-        local callback = config.Callback or function() end
-        local default = config.Default or false
+    function GUI:CreateToggle(toggleConfig)
+        local tab = toggleConfig.Tab or "Stealing"
+        local text = toggleConfig.Text or "Toggle"
+        local callback = toggleConfig.Callback or function() end
+        local default = toggleConfig.Default or false
         
         local toggleData = {Value = default}
         
@@ -139,7 +174,7 @@ function Library:Create()
         Container.BackgroundTransparency = 0.1
         local ContainerCorner = Instance.new("UICorner", Container)
         
-        -- Toggle Butonu
+        -- Toggle Butonu (Text Kısmı)
         local ToggleButton = Instance.new("TextButton", Container)
         ToggleButton.BorderSizePixel = 0
         ToggleButton.TextXAlignment = Enum.TextXAlignment.Left
@@ -147,10 +182,11 @@ function Library:Create()
         ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         ToggleButton.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         ToggleButton.BackgroundTransparency = 1
-        ToggleButton.Size = UDim2.new(1, -50, 1, 0)
-        ToggleButton.Text = text
-        ToggleButton.Position = UDim2.new(0, 4, 0, 0)
+        ToggleButton.Size = UDim2.new(1, 0, 1, 0)
+        ToggleButton.Text = "  " .. text
+        ToggleButton.Position = UDim2.new(0, 0, 0, 0)
         ToggleButton.AutoButtonColor = false
+        ToggleButton.ZIndex = 4
         
         -- Toggle Switch (Dış Frame)
         local ToggleSwitch = Instance.new("Frame", Container)
@@ -172,6 +208,13 @@ function Library:Create()
         local CircleCorner = Instance.new("UICorner", ToggleCircle)
         CircleCorner.CornerRadius = UDim.new(0, 50)
         
+        -- Toggle Switch için tıklanabilir buton (görünmez)
+        local ToggleSwitchButton = Instance.new("TextButton", ToggleSwitch)
+        ToggleSwitchButton.Size = UDim2.new(1, 0, 1, 0)
+        ToggleSwitchButton.BackgroundTransparency = 1
+        ToggleSwitchButton.Text = ""
+        ToggleSwitchButton.ZIndex = 5
+        
         -- Toggle Animasyonu
         local function Toggle()
             toggleData.Value = not toggleData.Value
@@ -191,15 +234,13 @@ function Library:Create()
             circleTween:Play()
             switchTween:Play()
             
-            callback(toggleData.Value)
+            task.spawn(function()
+                callback(toggleData.Value)
+            end)
         end
         
         ToggleButton.MouseButton1Click:Connect(Toggle)
-        ToggleSwitch.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                Toggle()
-            end
-        end)
+        ToggleSwitchButton.MouseButton1Click:Connect(Toggle)
         
         function toggleData:SetValue(value)
             if self.Value ~= value then
