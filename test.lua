@@ -55,12 +55,14 @@ end
 
 function Library:Create(config)
     local GUI = {}
-    local CurrentTab = "Stealing"
+    local CurrentTab = nil
+    local Tabs = {}
     
     -- Konfigürasyon
     local toggleButtonConfig = config or {}
     local toggleImageId = toggleButtonConfig.ImageId or "rbxassetid://0"
     local toggleSize = toggleButtonConfig.Size or UDim2.new(0, 50, 0, 50)
+    local guiTitle = toggleButtonConfig.Title or "📂 Crusty HUB V1"
     
     -- Ana ScreenGui oluştur
     local ScreenGui = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
@@ -115,7 +117,7 @@ function Library:Create(config)
     Title.ZIndex = 2
     Title.BackgroundTransparency = 1
     Title.Size = UDim2.new(1, -20, 1, 0)
-    Title.Text = "  📂 Crusty HUB V1"
+    Title.Text = "  " .. guiTitle
     Title.Position = UDim2.new(0, 10, 0, 0)
     Title.TextColor3 = Color3.fromRGB(0, 0, 0)
     Title.Visible = true
@@ -129,54 +131,18 @@ function Library:Create(config)
     TabContainer.ZIndex = 2
     TabContainer.Visible = true
     
-    -- Tab Butonları
-    local StealingTab = Instance.new("TextButton", TabContainer)
-    StealingTab.BorderSizePixel = 0
-    StealingTab.TextSize = 14
-    StealingTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    StealingTab.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    StealingTab.Size = UDim2.new(0.31, 0, 1, 0)
-    StealingTab.Text = "⚡ Stealing"
-    StealingTab.Position = UDim2.new(0, 0, 0, 0)
-    StealingTab.TextColor3 = Color3.fromRGB(0, 0, 0)
-    local StealingCorner = Instance.new("UICorner", StealingTab)
+    local TabLayout = Instance.new("UIListLayout", TabContainer)
+    TabLayout.FillDirection = Enum.FillDirection.Horizontal
+    TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    TabLayout.Padding = UDim.new(0, 6)
     
-    local VisualTab = Instance.new("TextButton", TabContainer)
-    VisualTab.BorderSizePixel = 0
-    VisualTab.TextSize = 14
-    VisualTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    VisualTab.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    VisualTab.Size = UDim2.new(0.32, 0, 1, 0)
-    VisualTab.Text = "👁️ Visual"
-    VisualTab.Position = UDim2.new(0.345, 0, 0, 0)
-    VisualTab.TextColor3 = Color3.fromRGB(0, 0, 0)
-    local VisualCorner = Instance.new("UICorner", VisualTab)
-    
-    local PlayerTab = Instance.new("TextButton", TabContainer)
-    PlayerTab.BorderSizePixel = 0
-    PlayerTab.TextSize = 14
-    PlayerTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    PlayerTab.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-    PlayerTab.Size = UDim2.new(0.31, 0, 1, 0)
-    PlayerTab.Text = "👥 Player"
-    PlayerTab.Position = UDim2.new(0.69, 0, 0, 0)
-    PlayerTab.TextColor3 = Color3.fromRGB(0, 0, 0)
-    local PlayerCorner = Instance.new("UICorner", PlayerTab)
-    
-    -- İçerik Frameleri
-    local ContentFrames = {}
-    ContentFrames["Stealing"] = Instance.new("Frame", MainFrame)
-    ContentFrames["Visual"] = Instance.new("Frame", MainFrame)
-    ContentFrames["Player"] = Instance.new("Frame", MainFrame)
-    
-    for _, frame in pairs(ContentFrames) do
-        frame.BorderSizePixel = 0
-        frame.BackgroundTransparency = 1
-        frame.Size = UDim2.new(1, -24, 1, -80)
-        frame.Position = UDim2.new(0, 12, 0, 74)
-        frame.Visible = false
-    end
-    ContentFrames["Stealing"].Visible = true
+    -- İçerik Container
+    local ContentContainer = Instance.new("Frame", MainFrame)
+    ContentContainer.BorderSizePixel = 0
+    ContentContainer.BackgroundTransparency = 1
+    ContentContainer.Size = UDim2.new(1, -24, 1, -80)
+    ContentContainer.Position = UDim2.new(0, 12, 0, 74)
+    ContentContainer.Visible = true
     
     -- Toggle Açma/Kapama Fonksiyonu
     local UIOpen = true
@@ -185,29 +151,75 @@ function Library:Create(config)
         MainFrame.Visible = UIOpen
     end)
     
-    -- Tab Değiştirme Fonksiyonu
-    local function SwitchTab(tabName)
-        CurrentTab = tabName
-        for name, frame in pairs(ContentFrames) do
-            frame.Visible = UIOpen and (name == tabName)
+    -- Tab Oluşturma Fonksiyonu
+    function GUI:CreateTab(tabName)
+        -- Tab butonu oluştur
+        local TabButton = Instance.new("TextButton", TabContainer)
+        TabButton.BorderSizePixel = 0
+        TabButton.TextSize = 14
+        TabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        TabButton.FontFace = Font.new("rbxasset://fonts/families/Arimo.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        TabButton.AutomaticSize = Enum.AutomaticSize.X
+        TabButton.Size = UDim2.new(0, 0, 1, 0)
+        TabButton.Text = " " .. tabName .. " "
+        TabButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+        local TabCorner = Instance.new("UICorner", TabButton)
+        
+        local TabPadding = Instance.new("UIPadding", TabButton)
+        TabPadding.PaddingLeft = UDim.new(0, 10)
+        TabPadding.PaddingRight = UDim.new(0, 10)
+        
+        -- Tab içerik frame'i oluştur
+        local ContentFrame = Instance.new("Frame", ContentContainer)
+        ContentFrame.BorderSizePixel = 0
+        ContentFrame.BackgroundTransparency = 1
+        ContentFrame.Size = UDim2.new(1, 0, 1, 0)
+        ContentFrame.Position = UDim2.new(0, 0, 0, 0)
+        ContentFrame.Visible = false
+        
+        -- Auto Layout ekle
+        local layout = Instance.new("UIListLayout", ContentFrame)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Padding = UDim.new(0, 6)
+        
+        -- Tab'ı kaydet
+        Tabs[tabName] = {
+            Button = TabButton,
+            Frame = ContentFrame
+        }
+        
+        -- İlk tab ise otomatik aç
+        if CurrentTab == nil then
+            CurrentTab = tabName
+            ContentFrame.Visible = true
         end
+        
+        -- Tab değiştirme
+        TabButton.MouseButton1Click:Connect(function()
+            for name, tab in pairs(Tabs) do
+                tab.Frame.Visible = (name == tabName) and UIOpen
+            end
+            CurrentTab = tabName
+        end)
+        
+        return ContentFrame
     end
-    
-    StealingTab.MouseButton1Click:Connect(function() SwitchTab("Stealing") end)
-    VisualTab.MouseButton1Click:Connect(function() SwitchTab("Visual") end)
-    PlayerTab.MouseButton1Click:Connect(function() SwitchTab("Player") end)
     
     -- Toggle Oluşturma Fonksiyonu
     function GUI:CreateToggle(toggleConfig)
-        local tab = toggleConfig.Tab or "Stealing"
+        local tab = toggleConfig.Tab
         local text = toggleConfig.Text or "Toggle"
         local callback = toggleConfig.Callback or function() end
         local default = toggleConfig.Default or false
         
+        if not Tabs[tab] then
+            error("Tab '" .. tab .. "' bulunamadı! Önce tab oluşturun.")
+        end
+        
         local toggleData = {Value = default}
         
         -- Toggle Container
-        local Container = Instance.new("Frame", ContentFrames[tab])
+        local Container = Instance.new("Frame", Tabs[tab].Frame)
         Container.BorderSizePixel = 0
         Container.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         Container.Size = UDim2.new(1, 0, 0, 36)
@@ -290,13 +302,6 @@ function Library:Create(config)
         end
         
         return toggleData
-    end
-    
-    -- Auto Layout için UIListLayout ekle
-    for _, frame in pairs(ContentFrames) do
-        local layout = Instance.new("UIListLayout", frame)
-        layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Padding = UDim.new(0, 6)
     end
     
     return GUI
