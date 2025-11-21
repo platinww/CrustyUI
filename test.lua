@@ -111,20 +111,20 @@ function Library:CreateWindow(config)
     OpenButton.Parent = ScreenGui
     OpenButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     OpenButton.BorderSizePixel = 0
-    OpenButton.Position = UDim2.new(0, 10, 0, 10)
-    OpenButton.Size = isMobile and UDim2.new(0, 50, 0, 50) or UDim2.new(0, 140, 0, 40)
+    OpenButton.Position = UDim2.new(0, 10, 0.5, -25)
+    OpenButton.Size = isMobile and UDim2.new(0, 50, 0, 50) or UDim2.new(0, 50, 0, 50)
     OpenButton.Font = Enum.Font.GothamBold
-    OpenButton.Text = isMobile and "" or " Open"
+    OpenButton.Text = ""
     OpenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     OpenButton.TextSize = 13
-    OpenButton.TextXAlignment = Enum.TextXAlignment.Left
+    OpenButton.TextXAlignment = Enum.TextXAlignment.Center
     OpenButton.AutoButtonColor = false
     OpenButton.Active = true
     OpenButton.Draggable = true
     OpenButton.ZIndex = 200
     
     local OpenCorner = Instance.new("UICorner")
-    OpenCorner.CornerRadius = UDim.new(0, isMobile and 25 or 8)
+    OpenCorner.CornerRadius = UDim.new(0, 12)
     OpenCorner.Parent = OpenButton
     
     local OpenGradient = Instance.new("UIGradient")
@@ -138,9 +138,9 @@ function Library:CreateWindow(config)
     local OpenIcon = Instance.new("ImageLabel")
     OpenIcon.Parent = OpenButton
     OpenIcon.BackgroundTransparency = 1
-    OpenIcon.Position = isMobile and UDim2.new(0.5, -10, 0.5, -10) or UDim2.new(0, 6, 0.5, -8)
-    OpenIcon.Size = UDim2.new(0, 16, 0, 16)
-    OpenIcon.Image = getIcon("sparkles")
+    OpenIcon.Position = UDim2.new(0.5, -14, 0.5, -14)
+    OpenIcon.Size = UDim2.new(0, 28, 0, 28)
+    OpenIcon.Image = config.Icon and getIcon(config.Icon) or getIcon("sparkles")
     OpenIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
     
     -- Main UI Container
